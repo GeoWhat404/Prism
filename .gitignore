@@ -1,0 +1,10 @@
+limine/
+ovmf/
+.vscode/
+kernel/bin/
+kernel/obj/
+
+*.iso
+*.o
+*.efi
+limine.conf
