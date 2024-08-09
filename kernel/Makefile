@@ -59,6 +59,7 @@ override KCFLAGS += \
     -mno-sse2 \
     -mno-red-zone \
     -mcmodel=kernel \
+	-mgeneral-regs-only \
 	-Isrc/ \
 	-Isrc/klibc/ \
 	-DDEBUG_MODE

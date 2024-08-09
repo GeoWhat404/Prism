@@ -1,5 +1,6 @@
 #include "isr.h"
 #include "idt.h"
+#include "irq.h"
 
 #include "pic.h"
 #include "port.h"
@@ -98,6 +99,7 @@ void hndlr() {
 void isr_initialize() {
     pic_remap(PIC_REMAP_OFFSET, PIC_REMAP_OFFSET + 0x08);
     pic_mask_all();
+    pic_unmask(IRQ2);
 
     for (int i = 0; i < 48; i++) {
         idt_set_gate(i, (uint64_t)(isr_stub_table[i]), 0x8E);

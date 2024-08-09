@@ -32,6 +32,12 @@ static void pit_timer(registers_t *regs) {
 void irq_initialize() {
     pic_unmask_all();
 
+    outb(0x43, (uint8_t) ((3 << 4) | (1 << 2) | 0));
+
+    if (!pic_probe()) {
+        log_error(MODULE_INTRPT, "No PIC found!");
+    }
+
     // They should be already enabled but just in case...
     __asm__ volatile("sti");
 

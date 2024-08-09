@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define PIC1_COMMAND_PORT   0x20
 #define PIC1_DATA_PORT      0x21
@@ -19,13 +20,18 @@
 #define ICW4_BUF_MASTER     0x0C
 #define ICW4_SFNM           0x10
 
-#define PIC_REMAP_OFFSET    0x20
+#define PIC_REMAP_OFFSET    32
 
 void pic_remap(int o1, int o2);
 void pic_disable();
 void pic_send_eoi(int irq);
 
+void pic_set_mask(uint16_t new_mask);
+uint16_t pic_get_mask();
+
 void pic_mask(int irq);
 void pic_unmask(int irq);
 void pic_mask_all();
 void pic_unmask_all();
+
+bool pic_probe();

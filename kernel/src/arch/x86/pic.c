@@ -42,6 +42,15 @@ void pic_send_eoi(int irq) {
     outb(0x20, 0x20);
 }
 
+void pic_set_mask(uint16_t new_mask) {
+    outb(PIC1_DATA_PORT, new_mask & 0xFF);
+    outb(PIC1_DATA_PORT, new_mask >> 8);
+}
+
+uint16_t pic_get_mask() {
+    return inb(PIC1_DATA_PORT) | (inb(PIC2_DATA_PORT) << 8);
+}
+
 void pic_mask(int irq) {
     uint16_t port;
     uint8_t val;
@@ -78,4 +87,10 @@ void pic_mask_all() {
 void pic_unmask_all() {
     for (int i = 0; i < 15; i++)
         pic_unmask(i);
+}
+
+bool pic_probe() {
+    pic_disable();
+    pic_set_mask(0x1337);
+    return pic_get_mask() == 0x1337;
 }
