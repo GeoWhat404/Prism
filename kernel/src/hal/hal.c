@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "isr.h"
 #include "irq.h"
+#include "pit.h"
 
 #include <util/debug.h>
 
@@ -19,4 +20,7 @@ void hal_initialize() {
 
     irq_initialize();
     log_debug(MODULE_HAL, "IRQ Initialized");
+
+    pit_initialize();
+    log_debug(MODULE_HAL, "PIT Initialized");
 }

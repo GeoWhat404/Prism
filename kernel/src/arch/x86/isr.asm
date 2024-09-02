@@ -101,9 +101,6 @@ syscall_entry:
     o64 sysret
 
 isr_common:
-    extern dbg_trap
-    call dbg_trap
-
     PUSH_ALL
 
     mov rbp, ds

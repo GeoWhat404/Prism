@@ -10,7 +10,6 @@
 pfn_irq_handler handlers[16];
 
 void irq_handle_interrupt(registers_t *regs) {
-    log_debug(MODULE_INTRPT, "Called to handle - Returning to abandon (PLEASE SEND HELP)");
     uint32_t irq = regs->interrupt - PIC_REMAP_OFFSET;
 
     if (handlers[irq] == NULL) {
@@ -27,8 +26,6 @@ void irq_initialize() {
 
     i8259_mask_all();
 
-//    outb(0x43, (uint8_t) ((3 << 4) | (1 << 2) | 0));
-
     if (!i8259_probe()) {
         log_error(MODULE_INTRPT, "No PIC found!");
     }
@@ -41,8 +38,6 @@ void irq_initialize() {
 
     i8259_unmask(IRQ0);
     i8259_unmask(IRQ1);
-    i8259_unmask(IRQ2);
-    i8259_unmask(IRQ8);
 }
 
 void irq_register_handler(int irq, pfn_irq_handler handler) {

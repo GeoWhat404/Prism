@@ -5,6 +5,7 @@
 
 #include <hal/fb.h>
 #include <hal/hal.h>
+#include <hal/pit.h>
 
 #include <util/debug.h>
 #include <util/defines.h>
@@ -60,6 +61,8 @@ void _start(void) {
 
     hal_initialize();
     printf("HAL Initialized\n");
+
+    printf("Initial setup complete in %llus\n", pit_get_seconds());
 
     for (;;);
 }
