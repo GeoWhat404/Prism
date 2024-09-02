@@ -12,23 +12,20 @@
 
 void hal_initialize() {
     gdt_initialize();
-    log_debug(MODULE_HAL, "GDT Initialized");
+    log_info(MODULE_HAL, "GDT Initialized");
 
     idt_initialize();
-    log_debug(MODULE_HAL, "IDT Initialized");
+    log_info(MODULE_HAL, "IDT Initialized");
 
     isr_initialize();
-    log_debug(MODULE_HAL, "ISR Initialized");
+    log_info(MODULE_HAL, "ISR Initialized");
 
     irq_initialize();
-    log_debug(MODULE_HAL, "IRQ Initialized");
+    log_info(MODULE_HAL, "IRQ Initialized");
 
     pit_initialize();
-    log_debug(MODULE_HAL, "PIT Initialized");
+    log_info(MODULE_HAL, "PIT Initialized");
 
     rtc_initialize();
-    log_debug(MODULE_HAL, "RTC Initialized");
-
-    //paging_initialize();
-    log_debug(MODULE_HAL, "Paging Initialized");
+    log_info(MODULE_HAL, "RTC Initialized");
 }

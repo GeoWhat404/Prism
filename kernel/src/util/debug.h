@@ -7,6 +7,10 @@
 #define MODULE_MAIN     "KERNEL"
 #define MODULE_HAL      "HAL"
 #define MODULE_INTRPT   "INTRPT"
+#define MODULE_MMU      "MMU"
+#define MODULE_VMM      "VMM"
+#define MODULE_PMM      "PMM"
+#define MODULE_SPINLOCK "SPINLOCK"
 
 enum {
     LVL_DEBUG = 0,

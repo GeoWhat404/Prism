@@ -26,7 +26,7 @@ Language: Cpp
 # void formatted_code_again;
 
 DisableFormat:   false
-Standard: Cpp17
+Standard: Auto
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: true
@@ -61,7 +61,7 @@ BraceWrapping: {
     AfterUnion : 'false'
     BeforeCatch : 'false'
     BeforeElse : 'false'
-    IndentBraces : 'false'
+    IndentBraces : 'true'
     AfterExternBlock : 'false'
     SplitEmptyFunction : 'false'
     SplitEmptyRecord : 'false'

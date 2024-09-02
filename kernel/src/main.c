@@ -15,6 +15,9 @@
 #include <util/datetime.h>
 
 #include <mem/mem.h>
+#include <mem/pmm.h>
+#include <mem/vmm.h>
+#include <mem/paging.h>
 
 #include <boot/boot.h>
 #include <boot/limine.h>
@@ -40,6 +43,12 @@ static volatile struct limine_kernel_address_request kernel_addr_request = {
     .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_hhdm_request hhdm_request = {
+    .id = LIMINE_HHDM_REQUEST,
+    .revision = 0
+};
+
 __attribute__((used, section(".requests_start_marker")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -48,6 +57,35 @@ static volatile LIMINE_REQUESTS_END_MARKER;
 
 static void hcf(void) {
     panic();
+}
+
+void init_mmu() {
+    pmm_initialize();
+    vmm_initialize();
+    paging_initialize();
+
+    printf("MMU Components Initialized\n");
+    log_info(MODULE_MAIN, "MMU Initialized");
+}
+
+void init_systems() {
+    fb_initialize(boot_info.lfb);
+
+    printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
+    log_info(MODULE_MAIN, "Prism Kernel loaded");
+
+    hal_initialize();
+    printf("HAL Initialized\n");
+
+    init_mmu();
+
+    memory_print();
+    datetime_t time = rtc_get_datetime();
+    printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",
+           time.hours, time.minutes, time.seconds,
+           time.days, time.months, time.years);
+
+    printf("Initial setup complete in %llus\n", pit_get_seconds());
 }
 
 void _start(void) {
@@ -63,29 +101,15 @@ void _start(void) {
     struct limine_framebuffer *lfb = framebuffer_request.response->framebuffers[0];
     struct limine_memmap_response *lmmr = memmap_request.response;
     struct limine_kernel_address_response *kernel_addr = kernel_addr_request.response;
+    struct limine_hhdm_response *lhhdmr = hhdm_request.response;
 
     boot_info.lfb = lfb;
-
     boot_info.lmmr = lmmr;
+    boot_info.lhhdmr = lhhdmr;
     boot_info.kernel_phys_base = kernel_addr->physical_base;
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
-    fb_initialize(lfb);
-
-    printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
-    log_info(MODULE_MAIN, "Prism Kernel loaded");
-
-    hal_initialize();
-    printf("HAL Initialized\n");
-
-    memory_print();
-
-    datetime_t time = rtc_get_datetime();
-    printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",
-           time.hours, time.minutes, time.seconds,
-           time.days, time.months, time.years);
-
-    printf("Initial setup complete in %llus\n", pit_get_seconds());
+    init_systems();
 
     for (;;);
 }
