@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -7,10 +8,13 @@
 #include <hal/hal.h>
 #include <hal/pit.h>
 #include <hal/rtc.h>
+#include <hal/panic.h>
 
 #include <util/debug.h>
 #include <util/defines.h>
 #include <util/datetime.h>
+
+#include <mem/mem.h>
 
 #include <boot/boot.h>
 #include <boot/limine.h>
@@ -30,6 +34,12 @@ static volatile struct limine_memmap_request memmap_request = {
     .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_kernel_address_request kernel_addr_request = {
+    .id = LIMINE_KERNEL_ADDRESS_REQUEST,
+    .revision = 0
+};
+
 __attribute__((used, section(".requests_start_marker")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -37,10 +47,7 @@ __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
 static void hcf(void) {
-    asm ("cli");
-    for (;;) {
-        asm ("hlt");
-    }
+    panic();
 }
 
 void _start(void) {
@@ -55,6 +62,13 @@ void _start(void) {
 
     struct limine_framebuffer *lfb = framebuffer_request.response->framebuffers[0];
     struct limine_memmap_response *lmmr = memmap_request.response;
+    struct limine_kernel_address_response *kernel_addr = kernel_addr_request.response;
+
+    boot_info.lfb = lfb;
+
+    boot_info.lmmr = lmmr;
+    boot_info.kernel_phys_base = kernel_addr->physical_base;
+    boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
     fb_initialize(lfb);
 
@@ -63,6 +77,8 @@ void _start(void) {
 
     hal_initialize();
     printf("HAL Initialized\n");
+
+    memory_print();
 
     datetime_t time = rtc_get_datetime();
     printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",

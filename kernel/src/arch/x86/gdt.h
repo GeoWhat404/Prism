@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <util/defines.h>
 
-#define GDT_KERNEL_CODE 40
+#define GDT_KERNEL_CODE 0x28
 #define GDT_KERNEL_DATA 0x38
 #define GDT_USER_CODE   0x50
 #define GDT_USER_DATA   0x48

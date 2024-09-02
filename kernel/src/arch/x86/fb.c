@@ -157,7 +157,7 @@ void fb_putc(char c) {
             screen_x = 0;
             goto end;
         case '\t':
-            for (uint32_t i = 0; i < 8 - (screen_x % 8); i++)
+            for (uint32_t i = 0; i < 4 - (screen_x % 4); i++)
                 fb_putc(' ');
             goto end;
     }

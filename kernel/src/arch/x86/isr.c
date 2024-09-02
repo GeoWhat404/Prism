@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "isr.h"
+#include "panic.h"
 
 #include <util/debug.h>
 
@@ -64,6 +65,12 @@ void isr_handle_interrupt(uint64_t rsp) {
 
     if (isr_handlers[cpu->interrupt] == 0) {
         log_error(MODULE_INTRPT, "Unhandled interrupt 0x%x", cpu->interrupt);
+        printf("----- [ kernel panic ] -----\n");
+        printf("interrupt: 0x%llx (%s)\n",
+               cpu->interrupt, exceptions[cpu->interrupt]);
+        dump_regs(cpu);
+        printf("----- [ end trace ] -----\n");
+        panic();
     }
     isr_handlers[cpu->interrupt](cpu);
 }
