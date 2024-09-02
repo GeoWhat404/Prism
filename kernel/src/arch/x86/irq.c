@@ -1,7 +1,7 @@
 #include "irq.h"
 #include "isr.h"
-#include "pic.h"
 #include "port.h"
+#include "i8259.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -19,33 +19,30 @@ void irq_handle_interrupt(registers_t *regs) {
     } else {
         handlers[irq](regs);
     }
-    pic_send_eoi(irq);
-}
-
-static void pit_timer(registers_t *regs) {
-    (void)regs;
-
-    log_debug(MODULE_INTRPT, "TIMER!");
-    printf("TICK!");
+    i8259_send_eoi(irq);
 }
 
 void irq_initialize() {
-    pic_unmask_all();
+    i8259_remap(PIC_REMAP_OFFSET);
 
-    outb(0x43, (uint8_t) ((3 << 4) | (1 << 2) | 0));
+    i8259_mask_all();
 
-    if (!pic_probe()) {
+//    outb(0x43, (uint8_t) ((3 << 4) | (1 << 2) | 0));
+
+    if (!i8259_probe()) {
         log_error(MODULE_INTRPT, "No PIC found!");
     }
 
     // They should be already enabled but just in case...
     __asm__ volatile("sti");
 
-    for (int i = PIC_REMAP_OFFSET; i < PIC_REMAP_OFFSET + 15; i++)
-        isr_register_handler(i, irq_handle_interrupt);
+    for (int i = 0; i < 16; i++)
+        isr_register_handler(i + PIC_REMAP_OFFSET, irq_handle_interrupt);
 
-    irq_register_handler(IRQ0, pit_timer);
-    irq_register_handler(32, pit_timer);
+    i8259_unmask(IRQ0);
+    i8259_unmask(IRQ1);
+    i8259_unmask(IRQ2);
+    i8259_unmask(IRQ8);
 }
 
 void irq_register_handler(int irq, pfn_irq_handler handler) {

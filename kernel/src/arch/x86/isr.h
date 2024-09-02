@@ -13,6 +13,8 @@
 #define RFLAGS_IF       (1 << 9)
 #define RFLAGS_DF       (1 << 10)
 
+#define ISR_HANDLER_COUNT 256
+
 typedef struct {
 	uint64_t ds;
 

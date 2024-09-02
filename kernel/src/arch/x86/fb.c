@@ -110,6 +110,7 @@ int fb_get_color(int x, int y) {
 void fb_scrollback(uint32_t lines) {
     cursor_hide();
 
+    /*
     // Ensure lines to scroll is not greater than screen height
     if (lines > screen_y / FONT_HEIGHT) lines = screen_y / FONT_HEIGHT;
 
@@ -135,6 +136,10 @@ void fb_scrollback(uint32_t lines) {
 
     // Update screen_y position
     screen_y -= lines * FONT_HEIGHT;
+    */
+    fb_clrscr();
+    screen_x = 0;
+    screen_y = 0;
 
     cursor_show();
 }

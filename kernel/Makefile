@@ -43,25 +43,23 @@ $(eval $(call DEFAULT_VAR,KLDFLAGS,$(DEFAULT_KLDFLAGS)))
 
 # Internal C flags that should not be changed by the user.
 override KCFLAGS += \
-    -Wall \
-    -Wextra \
-    -std=gnu11 \
-    -ffreestanding \
-    -fno-stack-protector \
-    -fno-stack-check \
-    -fno-lto \
-    -fno-PIC \
     -m64 \
-    -march=x86-64 \
-    -mno-80387 \
-    -mno-mmx \
-    -mno-sse \
-    -mno-sse2 \
-    -mno-red-zone \
-    -mcmodel=kernel \
-	-mgeneral-regs-only \
+	-ffreestanding \
+	-Wall \
+	-fcommon \
 	-Isrc/ \
 	-Isrc/klibc/ \
+	-fPIE \
+	-fPIC \
+	-mno-80387 \
+    -mno-mmx \
+    -mno-sse \
+	-nostartfiles \
+	-nostdlib \
+    -mno-sse2 \
+    -mno-red-zone -fno-stack-protector \
+    -fno-stack-check \
+    -fno-lto \
 	-DDEBUG_MODE
 
 # Internal C preprocessor flags that should not be changed by the user.
@@ -76,6 +74,8 @@ override KLDFLAGS += \
     -m elf_x86_64 \
     -nostdlib \
     -static \
+	-pie \
+	--no-dynamic-linker \
     -z max-page-size=0x1000 \
     -T linker.ld
 

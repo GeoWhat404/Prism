@@ -61,5 +61,5 @@ void _start(void) {
     hal_initialize();
     printf("HAL Initialized\n");
 
-    hcf();
+    for (;;);
 }

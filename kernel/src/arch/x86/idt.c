@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "gdt.h"
+#include "port.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <util/debug.h>
@@ -22,6 +23,7 @@ typedef struct {
 } __attribute__((packed)) idt_descriptor_t;
 
 idt_entry_t idt[IDT_ENTRIES];
+extern uint64_t _isr1;
 
 void idt_load() {
     idt_descriptor_t idt_desc;
@@ -37,15 +39,16 @@ void idt_load() {
 void idt_set_gate(int interrupt, uint64_t handler, uint8_t flags) {
     if (idt[interrupt].selector != 0)
         log_warn(MODULE_INTRPT, "Overriding previous IDT entry for 0x%x", interrupt);
-    idt[interrupt].offset_1 = (uint16_t) handler;
+    idt[interrupt].offset_1 = handler & 0xFFFF;
     idt[interrupt].selector = GDT_KERNEL_CODE;
     idt[interrupt].ist = 0;
     idt[interrupt].attribs = flags;
-    idt[interrupt].offset_2 = (uint16_t)(handler >> 16);
-    idt[interrupt].offset_3 = (uint32_t)(handler >> 32);
+    idt[interrupt].offset_2 = (handler >> 16) & 0xFFFF;
+    idt[interrupt].offset_3 = (handler >> 32) & 0xFFFFFFFF;
     idt[interrupt].reserved = 0;
 }
 
 void idt_initialize() {
     idt_load();
 }
+
