@@ -6,9 +6,11 @@
 #include <hal/fb.h>
 #include <hal/hal.h>
 #include <hal/pit.h>
+#include <hal/rtc.h>
 
 #include <util/debug.h>
 #include <util/defines.h>
+#include <util/datetime.h>
 
 #include <boot/boot.h>
 #include <boot/limine.h>
@@ -61,6 +63,11 @@ void _start(void) {
 
     hal_initialize();
     printf("HAL Initialized\n");
+
+    datetime_t time = rtc_get_datetime();
+    printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",
+           time.hours, time.minutes, time.seconds,
+           time.days, time.months, time.years);
 
     printf("Initial setup complete in %llus\n", pit_get_seconds());
 

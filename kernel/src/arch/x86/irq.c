@@ -38,6 +38,8 @@ void irq_initialize() {
 
     i8259_unmask(IRQ0);
     i8259_unmask(IRQ1);
+    i8259_unmask(IRQ2);
+    i8259_unmask(IRQ8);
 }
 
 void irq_register_handler(int irq, pfn_irq_handler handler) {

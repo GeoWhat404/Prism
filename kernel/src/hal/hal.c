@@ -5,6 +5,7 @@
 #include "isr.h"
 #include "irq.h"
 #include "pit.h"
+#include "rtc.h"
 
 #include <util/debug.h>
 
@@ -23,4 +24,7 @@ void hal_initialize() {
 
     pit_initialize();
     log_debug(MODULE_HAL, "PIT Initialized");
+
+    rtc_initialize();
+    log_debug(MODULE_HAL, "RTC Initialized");
 }

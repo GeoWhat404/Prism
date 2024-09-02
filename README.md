@@ -8,8 +8,8 @@ Prism is licensed under the [MIT License](LICENSE). See the `LICENSE` file for m
 
 ## Roadmap
 - Architecture: x86_64 (amd64)
-  - [ ] Interrupts: ISR, IRQ, GDT
-  - [ ] Generic: RTC
+  - [X] Interrupts: ISR, IRQ, GDT
+  - [X] Generic: RTC
 - Memory
   - [ ] Enable paging
   - [ ] Physical memory manager

@@ -11,7 +11,7 @@ all-hdd: $(IMAGE_NAME).hdd
 
 .PHONY: run
 run: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d -d int
+	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d -rtc base=localtime
 
 .PHONY: run-uefi
 run-uefi: ovmf $(IMAGE_NAME).iso
