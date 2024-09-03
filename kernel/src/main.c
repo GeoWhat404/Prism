@@ -18,12 +18,20 @@
 #include <mem/pmm.h>
 #include <mem/vmm.h>
 #include <mem/paging.h>
+#include <mem/heap/heap.h>
 
 #include <boot/boot.h>
 #include <boot/limine.h>
 
 __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
+
+__attribute__((used, section(".requests")))
+static volatile struct limine_paging_mode_request paging_request = {
+    .id = LIMINE_PAGING_MODE_REQUEST,
+    .revision = 0,
+    .mode = LIMINE_PAGING_MODE_X86_64_4LVL
+};
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
@@ -64,6 +72,12 @@ void init_mmu() {
     vmm_initialize();
     paging_initialize();
 
+    memory_print();
+
+    struct limine_memmap_entry *region = pmm_get_first_free_region();
+//    heap_init(region->base, region->length);
+    heap_init(0x100000, 2145320960);
+
     printf("MMU Components Initialized\n");
     log_info(MODULE_MAIN, "MMU Initialized");
 }
@@ -93,6 +107,11 @@ void _start(void) {
         hcf();
     }
 
+    struct limine_paging_mode_response *lpagingr = paging_request.response;
+    if (lpagingr->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
+        panic("lvl4 paging not supported");
+    }
+
     if (framebuffer_request.response == NULL
      || framebuffer_request.response->framebuffer_count < 1) {
         hcf();
@@ -110,6 +129,16 @@ void _start(void) {
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
     init_systems();
+
+    char *str = kmalloc(sizeof(char) * 3);
+    if (!str) {
+        panic("STR IS NULL!");
+    }
+    str[0] = 'a';
+    str[1] = 'b';
+    str[2] = '\0';
+    printf("%s\n", str);
+    kfree(str);
 
     for (;;);
 }

@@ -9,11 +9,9 @@
 #define CURSOR_HEIGHT FONT_HEIGHT
 #define BLINK_INTERVAL 9
 
-#define COLOR(r, g, b) ((b) | (g << 8) | (r << 16))
-#define BACKGROUND_COLOR COLOR(0, 0, 0)
-#define FOREGROUND_COLOR COLOR(0, 255, 0)
 #define COLOR_TEMP(x) COLOR(x * 255, x * 255, x * 255)
 
+static struct limine_framebuffer *lfb;
 static uint32_t *fb;
 static uint32_t width;
 static uint32_t height;
@@ -23,6 +21,8 @@ static uint32_t screen_x;
 static uint32_t screen_y;
 static uint32_t cursor_x;
 static uint32_t cursor_y;
+static uint32_t background_color = COLOR(0, 0, 0);
+static uint32_t foreground_color = COLOR(255, 255, 255);
 
 static bool should_show_cursor = false;
 static bool cursor_visible = false;
@@ -59,7 +59,7 @@ static void cursor_show() {
     for (uint32_t y = 0; y < CURSOR_HEIGHT; y++) {
         for (uint32_t x = 0; x < CURSOR_WIDTH; x++) {
             fb_getpixel(cursor_x + x, cursor_y + y, &cursor_backup[y * CURSOR_WIDTH + x]);
-            fb_putpixel(cursor_x + x, cursor_y + y, FOREGROUND_COLOR);
+            fb_putpixel(cursor_x + x, cursor_y + y, foreground_color);
         }
     }
 
@@ -77,7 +77,8 @@ static _unused void cursor_callback(uint32_t ticks) {
         cursor_show();
 }
 
-void fb_initialize(struct limine_framebuffer *lfb) {
+void fb_initialize(struct limine_framebuffer *_lfb) {
+    lfb = _lfb;
     fb = lfb->address;
     width = lfb->width - (lfb->width % FONT_WIDTH);
     height = lfb->height - (lfb->height % FONT_HEIGHT);
@@ -91,16 +92,27 @@ void fb_initialize(struct limine_framebuffer *lfb) {
 void fb_clrscr() {
     cursor_hide();
 
-    for (uint32_t y = 0; y < height; y++) {
-        for (uint32_t x = 0; x < width; x++) {
-            if (fb[y * pitch / 4 + x] == 0x00)
+    for (uint32_t y = 0; y < lfb->height; y++) {
+        for (uint32_t x = 0; x < lfb->width; x++) {
+            if (fb[y * pitch / 4 + x] == background_color)
                 continue;
-            fb_putpixel(x, y, 0x00);
+            fb_putpixel(x, y, background_color);
         }
     }
     screen_x = 0;
     screen_y = 0;
     fb_set_cursor(screen_x, screen_y);
+}
+
+void fb_clear_color(uint32_t new_color) {
+    for (uint32_t y = 0; y < lfb->height; y++) {
+        for (uint32_t x = 0; x < lfb->width; x++) {
+            if (fb[y * pitch / 4 + x] != background_color)
+                continue;
+            fb_putpixel(x, y, new_color);
+        }
+    }
+    background_color = new_color;
 }
 
 int fb_get_color(int x, int y) {
@@ -125,7 +137,7 @@ void fb_scrollback(uint32_t lines) {
 
     for (uint32_t y = height - scroll_pixels; y < height; y++) {
         for (uint32_t x = 0; x < width; x++) {
-            fb_putpixel(x, y, BACKGROUND_COLOR);
+            fb_putpixel(x, y, background_color);
         }
     }
 

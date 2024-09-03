@@ -29,6 +29,7 @@ void bitmap_set(bitmap_t *bitmap, size_t block, bool val);
 void bitmap_set_blocks(bitmap_t *bitmap, size_t start, size_t size, bool val);
 void bitmap_set_region(bitmap_t *bitmap, void *base_ptr,
                        size_t byte_size, int used);
+int bitmap_get_region(bitmap_t *bitmap, void *base_ptr, size_t byte_size);
 
 size_t bitmap_find_first_free_region(bitmap_t *bitmap, size_t blocks);
 

@@ -47,6 +47,17 @@ void bitmap_set_blocks(bitmap_t *bitmap, size_t start, size_t size, bool val) {
         bitmap_set(bitmap, i, val);
 }
 
+int bitmap_get_all_free_blocks(bitmap_t *bitmap, size_t start, size_t size) {
+    int flag = 1;
+
+    if (start < bitmap->last_deep_fragmented)
+        bitmap->last_deep_fragmented = start;
+
+    for (int i = start; i < start + size; i++)
+        flag &= bitmap_get(bitmap, i);
+    return flag;
+}
+
 void bitmap_set_region(bitmap_t *bitmap, void *base_ptr,
                        size_t byte_size, int used) {
     size_t base;
@@ -60,6 +71,15 @@ void bitmap_set_region(bitmap_t *bitmap, void *base_ptr,
         size = byte_size / BLOCK_SIZE;
     }
     bitmap_set_blocks(bitmap, base, size, used);
+}
+
+int bitmap_get_region(bitmap_t *bitmap, void *base_ptr, size_t byte_size) {
+    size_t base;
+    size_t size;
+
+    base = bitmap_to_block_ceil(bitmap, base_ptr);
+    size = byte_size / BLOCK_SIZE;
+    return bitmap_get_all_free_blocks(bitmap, base, size);
 }
 
 size_t bitmap_find_first_free_region(bitmap_t *bitmap, size_t blocks) {

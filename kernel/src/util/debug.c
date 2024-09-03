@@ -29,10 +29,7 @@ void debugf(const char *fmt, ...) {
     va_end(args);
 }
 
-void logf(const char *module, int level, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-
+void vlogf(const char *module, int level, const char *fmt, va_list ap) {
     if (level < MIN_LOG_LEVEL)
         return;
 
@@ -43,10 +40,18 @@ void logf(const char *module, int level, const char *fmt, ...) {
     fprintf(VFS_FD_DEBUG, "[%s][%s]: ", log_severity_names[level], module);
 
     // print the message
-    vfprintf(VFS_FD_DEBUG, fmt, args);
+    vfprintf(VFS_FD_DEBUG, fmt, ap);
 
     // reset the color
     fprintf(VFS_FD_DEBUG, "%s\n", color_reset);
+
+}
+
+void logf(const char *module, int level, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    vlogf(module, level, fmt, args);
 
     va_end(args);
 }

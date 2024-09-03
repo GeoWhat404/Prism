@@ -4,6 +4,7 @@
 #include <boot/boot.h>
 #include <boot/limine.h>
 
+#include <hal/panic.h>
 #include <util/debug.h>
 
 #define KIB ((uint64_t) 1024)

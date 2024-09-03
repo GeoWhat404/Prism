@@ -10,6 +10,7 @@
 #define MODULE_MMU      "MMU"
 #define MODULE_VMM      "VMM"
 #define MODULE_PMM      "PMM"
+#define MODULE_HEAP     "HEAP"
 #define MODULE_SPINLOCK "SPINLOCK"
 
 enum {
@@ -25,6 +26,11 @@ enum {
  */
 void debugf(const char *fmt, ...);
 
+/**
+ * Writes the specified msg + va_list in the following format to VFS\_FD\_DBG
+ *      [lvl][module]: <formatted text>
+ */
+void vlogf(const char *module, int level, const char *fmt, va_list ap);
 /**
  * Writes the specified message in the following format to VFS\_FD\_DBG
  *      [lvl][module]: msg

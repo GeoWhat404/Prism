@@ -63,3 +63,18 @@ void pmm_initialize() {
 
     bitmap->intialized = true;
 }
+
+struct limine_memmap_entry *pmm_get_first_free_region() {
+    struct limine_memmap_entry *entry = 0;
+    for (int i = 0; i < boot_info.lmmr->entry_count; i++) {
+        entry = boot_info.lmmr->entries[i];
+        if (entry->type != LIMINE_MEMMAP_USABLE ||
+            bitmap_get_region(&phys, (void *)entry->base, entry->length))
+            continue;
+        if (entry != 0)
+            return entry;
+    }
+    if (entry == 0)
+        panic("pmm: could not find a free region");
+    return 0;
+}

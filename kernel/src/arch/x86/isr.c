@@ -66,8 +66,8 @@ void isr_handle_interrupt(uint64_t rsp) {
 
     if (isr_handlers[cpu->interrupt] == 0) {
         log_error(MODULE_INTRPT, "Unhandled interrupt 0x%x", cpu->interrupt);
-        panic("Unhandled interrupt 0x%llx (%s)",
-              cpu->interrupt, exceptions[cpu->interrupt]);
+        panic("%s (0x%llx)",
+              exceptions[cpu->interrupt], cpu->interrupt);
         dump_regs(cpu);
         printf("----- [ end trace ] -----\n");
     }

@@ -1,5 +1,7 @@
 #include "panic.h"
 
+#include "fb.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <util/debug.h>
@@ -10,7 +12,7 @@ void panic(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
-    log_fatal(MODULE_MAIN, "Kernel panic: %s", fmt);
+    log_fatal(MODULE_MAIN, "Kernel Panic");
 
     fprintf(VFS_FD_STDERR, "--- [ kernel panic ] ---\n"
                             "reason: ");
@@ -46,4 +48,6 @@ void dump_regs(registers_t *regs) {
            regs->rdi, regs->r13,
            regs->rbp, regs->r14,
            regs->usermode_rsp, regs->r15);
+
+    fb_clear_color(COLOR(255, 0, 0));
 }
