@@ -52,6 +52,12 @@ static volatile struct limine_kernel_address_request kernel_addr_request = {
 };
 
 __attribute__((used, section(".requests")))
+static volatile struct limine_kernel_file_request kernel_file_request = {
+    .id = LIMINE_KERNEL_FILE_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".requests")))
 static volatile struct limine_hhdm_request hhdm_request = {
     .id = LIMINE_HHDM_REQUEST,
     .revision = 0
@@ -72,11 +78,9 @@ void init_mmu() {
     vmm_initialize();
     paging_initialize();
 
-    memory_print();
-
     struct limine_memmap_entry *region = pmm_get_first_free_region();
-//    heap_init(region->base, region->length);
-    heap_init(0x100000, 2145320960);
+    heap_init(region->base, region->length);
+    //heap_init(0x100000, 2145320960);
 
     printf("MMU Components Initialized\n");
     log_info(MODULE_MAIN, "MMU Initialized");
@@ -90,6 +94,9 @@ void init_systems() {
 
     hal_initialize();
     printf("HAL Initialized\n");
+
+
+    //panic("asd");
 
     init_mmu();
 
@@ -120,25 +127,17 @@ void _start(void) {
     struct limine_framebuffer *lfb = framebuffer_request.response->framebuffers[0];
     struct limine_memmap_response *lmmr = memmap_request.response;
     struct limine_kernel_address_response *kernel_addr = kernel_addr_request.response;
+    struct limine_kernel_file_response *lkrnl_filer = kernel_file_request.response;
     struct limine_hhdm_response *lhhdmr = hhdm_request.response;
 
     boot_info.lfb = lfb;
     boot_info.lmmr = lmmr;
     boot_info.lhhdmr = lhhdmr;
+    boot_info.lkrnl = lkrnl_filer->kernel_file;
     boot_info.kernel_phys_base = kernel_addr->physical_base;
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
     init_systems();
-
-    char *str = kmalloc(sizeof(char) * 3);
-    if (!str) {
-        panic("STR IS NULL!");
-    }
-    str[0] = 'a';
-    str[1] = 'b';
-    str[2] = '\0';
-    printf("%s\n", str);
-    kfree(str);
 
     for (;;);
 }

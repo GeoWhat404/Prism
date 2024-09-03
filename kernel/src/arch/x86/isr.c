@@ -46,6 +46,20 @@ char *exceptions[] = {
     "Reserved",
     "Reserved"};
 
+static void page_fault_handler(registers_t *regs) {
+    uint64_t addr;
+    __asm__ volatile("mov %%cr2, %0" : "=r"(addr));
+
+    log_fatal(MODULE_MAIN, "Page Fault at 0x%016llx", addr);
+    fprintf(stderr, "\n--- < kernel panic > ---\n"
+                    "reason: Page Fault\n"
+                    "offending address: 0x%llx\n", addr);
+
+    dump_regs(regs);
+
+    __asm__ ("cli; hlt");
+}
+
 void isr_initialize() {
     // ISR exceptions 0 - 31
     for (int i = 0; i < 48; i++) {
@@ -54,6 +68,9 @@ void isr_initialize() {
 
     // Syscalls having DPL 3
     idt_set_gate(IDT_SYSCALL, (uint64_t)isr128, 0xEE);
+
+    // 0xE -> PAGE FAULT
+    isr_register_handler(0xE, page_fault_handler);
 }
 
 void isr_handle_interrupt(uint64_t rsp) {
@@ -65,15 +82,24 @@ void isr_handle_interrupt(uint64_t rsp) {
     }
 
     if (isr_handlers[cpu->interrupt] == 0) {
-        log_error(MODULE_INTRPT, "Unhandled interrupt 0x%x", cpu->interrupt);
+        log_error(MODULE_INTRPT, "Unhandled interrupt: %s (0x%x)",
+                  exceptions[cpu->interrupt], cpu->interrupt);
         panic("%s (0x%llx)",
               exceptions[cpu->interrupt], cpu->interrupt);
-        dump_regs(cpu);
-        printf("----- [ end trace ] -----\n");
     }
     isr_handlers[cpu->interrupt](cpu);
 }
 
 void isr_register_handler(int interrupt, pfn_isr_handler handler) {
+    if (handler == 0) {
+        log_warn(MODULE_INTRPT, "Tried to register a null isr handler");
+        return;
+    }
+
+    if (interrupt > ISR_HANDLER_COUNT) {
+        log_warn(MODULE_INTRPT, "Interrupt exceeds bounds of isr handler array");
+        return;
+    }
+
     isr_handlers[interrupt] = handler;
 }

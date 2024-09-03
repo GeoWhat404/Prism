@@ -28,20 +28,8 @@ asm_dump_regs:
     mov rbp, ds
     push rbp
 
-    ; Save instruction pointer, code segment, and error code
-    ; Note: pushq %cs and pushq %rip in AT&T assembly are not directly translatable.
-    ; Typically, these are captured via the interrupt/exception mechanism and pushed automatically.
-    ; However, assuming this is for an interrupt handler where RIP and CS are already pushed:
-    ; This part needs to be customized as per your interrupt mechanism setup.
-
-    ; Assuming %rip and %cs are pushed automatically by the CPU on an interrupt.
-    ; Also assuming that an error code is pushed (you may need to adjust depending on your use case).
-
-    ; If needed, manually adjust the stack pointer to align with the registers_t structure.
-    ; mov rdi, rsp  ; Create a pointer to the registers_t struct and call panic
-    mov rdi, rsp
+    mov rdi, rsp            ; Create a pointer to the registers_t struct
     call dump_regs
 
     cli
     hlt
-

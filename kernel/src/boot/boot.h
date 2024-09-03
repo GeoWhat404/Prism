@@ -6,6 +6,7 @@ typedef struct {
     struct limine_framebuffer *lfb;
     struct limine_memmap_response *lmmr;
     struct limine_hhdm_response *lhhdmr;
+    struct limine_file *lkrnl;
 
     uint64_t kernel_virt_base;
     uint64_t kernel_phys_base;
