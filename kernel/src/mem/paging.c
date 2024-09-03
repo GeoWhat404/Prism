@@ -13,7 +13,7 @@ void paging_initialize() {
     __asm__ volatile("movq %%cr3, %0" : "=r"(page_dir_phys));
     if (!page_dir_phys) {
         log_error(MODULE_MMU, "Failed to load first page directory");
-        panic();
+        panic("Could not load first page directory");
     }
     uint64_t page_dir_virt = page_dir_phys + boot_info.lhhdmr->offset;
     page_dir = (uint64_t *)page_dir_virt;

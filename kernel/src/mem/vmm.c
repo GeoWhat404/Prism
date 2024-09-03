@@ -42,7 +42,7 @@ void *vmm_allocate(int pages) {
 
     if (!p) {
         log_error(MODULE_VMM, "Physical kernel memory ran out");
-        panic();
+        panic("Out of memory");
     }
 
     uint64_t output = p + boot_info.lhhdmr->offset;
@@ -58,7 +58,7 @@ bool vmm_free(void *ptr, int pages) {
 
     if (!p) {
         log_error(MODULE_VMM, "Could not find physical address for %lx", ptr);
-        panic();
+        panic("Unkown phys addr for 0x%016lx", ptr);
     }
     spinlock_acquire(&lock_vmm);
     bitmap_set_region(&phys, (void *)p, pages * BLOCK_SIZE, 0);

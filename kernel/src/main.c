@@ -56,7 +56,7 @@ __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
 static void hcf(void) {
-    panic();
+    panic("halt catch fire");
 }
 
 void init_mmu() {
@@ -110,6 +110,8 @@ void _start(void) {
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
     init_systems();
+
+    __asm__ volatile("int $1");
 
     for (;;);
 }

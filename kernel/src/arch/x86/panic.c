@@ -1,13 +1,27 @@
 #include "panic.h"
+
+#include <stdio.h>
+#include <stdarg.h>
 #include <util/debug.h>
 
-void panic() {
-    log_fatal(MODULE_MAIN, "Kernel panic!");
-    __asm__ volatile("cli; hlt");
+extern void asm_dump_regs();
+
+void panic(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+
+    log_fatal(MODULE_MAIN, "Kernel panic: %s", fmt);
+
+    fprintf(VFS_FD_STDERR, "--- [ kernel panic ] ---\n"
+                            "reason: ");
+    vfprintf(VFS_FD_STDERR, fmt, ap);
+    fprintf(VFS_FD_STDERR, "\n");
+
+    asm_dump_regs();
 }
 
 void dump_regs(registers_t *regs) {
-    printf("---- < register dump > ----\n");
+    printf("-- < register dump > --\n");
 
     printf("RIP=0x%016llx\n",
            regs->rip);

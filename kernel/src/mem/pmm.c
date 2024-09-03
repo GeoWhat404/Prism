@@ -35,7 +35,7 @@ void pmm_initialize() {
                  phys.byte_size);
         printf("Out of memory (needed 0x%lx bytes)\n",
                phys.byte_size);
-        panic();
+        panic("Out of memory (needed 0x%lx bytes)", phys.byte_size);
         return;
     }
 
