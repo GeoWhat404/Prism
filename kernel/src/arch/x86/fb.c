@@ -10,8 +10,8 @@
 #define BLINK_INTERVAL 9
 
 #define COLOR(r, g, b) ((b) | (g << 8) | (r << 16))
-#define COLOR_BLACK COLOR(0, 0, 0)
-#define COLOR_WHITE COLOR(255, 255, 255)
+#define BACKGROUND_COLOR COLOR(0, 0, 0)
+#define FOREGROUND_COLOR COLOR(0, 255, 0)
 #define COLOR_TEMP(x) COLOR(x * 255, x * 255, x * 255)
 
 static uint32_t *fb;
@@ -59,7 +59,7 @@ static void cursor_show() {
     for (uint32_t y = 0; y < CURSOR_HEIGHT; y++) {
         for (uint32_t x = 0; x < CURSOR_WIDTH; x++) {
             fb_getpixel(cursor_x + x, cursor_y + y, &cursor_backup[y * CURSOR_WIDTH + x]);
-            fb_putpixel(cursor_x + x, cursor_y + y, COLOR_WHITE);
+            fb_putpixel(cursor_x + x, cursor_y + y, FOREGROUND_COLOR);
         }
     }
 
@@ -79,8 +79,8 @@ static _unused void cursor_callback(uint32_t ticks) {
 
 void fb_initialize(struct limine_framebuffer *lfb) {
     fb = lfb->address;
-    width = lfb->width;
-    height = lfb->height;
+    width = lfb->width - (lfb->width % FONT_WIDTH);
+    height = lfb->height - (lfb->height % FONT_HEIGHT);
     bpp = lfb->bpp;
     pitch = lfb->pitch;
 
@@ -110,40 +110,32 @@ int fb_get_color(int x, int y) {
 void fb_scrollback(uint32_t lines) {
     cursor_hide();
 
-    /*
-    // Ensure lines to scroll is not greater than screen height
-    if (lines > screen_y / FONT_HEIGHT) lines = screen_y / FONT_HEIGHT;
+    if (lines > height / FONT_HEIGHT) {
+        lines = height / FONT_HEIGHT;
+    }
 
-    // Calculate the number of bytes per row
+    uint32_t scroll_pixels = lines * FONT_HEIGHT;
 
-    // Move the content up
-    for (uint32_t y = lines; y < height; y++) {
+    for (uint32_t y = 0; y < height - scroll_pixels; y++) {
         for (uint32_t x = 0; x < width; x++) {
-            // Get the pixel color from the current row
-            uint32_t color = fb_get_color(x, y);
-
-            // Set the pixel color in the new row
-            fb_putpixel(x, y - lines, color);
+            uint32_t color = fb_get_color(x, y + scroll_pixels);
+            fb_putpixel(x, y, color);
         }
     }
 
-    // Clear the last 'lines' rows
-    for (uint32_t y = height - lines; y < height; y++) {
+    for (uint32_t y = height - scroll_pixels; y < height; y++) {
         for (uint32_t x = 0; x < width; x++) {
-            fb_putpixel(x, y, COLOR_BLACK); // Or any other background color
+            fb_putpixel(x, y, BACKGROUND_COLOR);
         }
     }
 
-    // Update screen_y position
-    screen_y -= lines * FONT_HEIGHT;
-    */
-    fb_clrscr();
-    screen_x = 0;
-    screen_y = 0;
+    screen_y -= scroll_pixels;
+    if (screen_y < 0) {
+        screen_y = 0;
+    }
 
     cursor_show();
 }
-
 
 void fb_putc(char c) {
     cursor_hide();
@@ -152,73 +144,57 @@ void fb_putc(char c) {
         case '\n':
             screen_x = 0;
             screen_y += FONT_HEIGHT;
-            goto end;
+
+            if (screen_y >= height) {
+                fb_scrollback(1);
+                screen_y = height - FONT_HEIGHT;
+            }
+            break;
+
         case '\r':
             screen_x = 0;
-            goto end;
+            break;
+
         case '\t':
             for (uint32_t i = 0; i < 4 - (screen_x % 4); i++)
                 fb_putc(' ');
-            goto end;
-    }
+            return;
 
-    int pos = font_positions[c - 32];
-    int byte_width = (FONT_WIDTH - 1) / 8 + 1;
+        default: {
+            // Render the character normally
+            int pos = font_positions[c - 32];
+            int byte_width = (FONT_WIDTH - 1) / 8 + 1;
 
-    for (int row = 0; row < FONT_HEIGHT; row++) {
-        uint32_t line = 0;
-        for (int byte = 0; byte < byte_width; byte++) {
-            line = (line << 8) | font_bitmap[pos + row * byte_width + byte];
-        }
-
-        for (int col = 0; col < FONT_WIDTH; col++) {
-            int pixel = (line & (1 << (FONT_WIDTH - 1 - col))) ? 1 : 0;
-
-            // Epic antialiasing algorithm
-            // check neighboring pixels to determine the antialiasing level
-            int neighbors = 0;
-            if (col > 0) neighbors += (line & (1 << (FONT_WIDTH - col))) ? 1 : 0;
-            if (col < FONT_WIDTH - 1) neighbors += (line & (1 << (FONT_WIDTH - 2 - col))) ? 1 : 0;
-            if (row > 0) {
-                uint32_t prev_line = 0;
+            for (int row = 0; row < FONT_HEIGHT; row++) {
+                uint32_t line = 0;
                 for (int byte = 0; byte < byte_width; byte++) {
-                    prev_line = (prev_line << 8) | font_bitmap[pos + (row - 1) * byte_width + byte];
+                    line = (line << 8) | font_bitmap[pos + row * byte_width + byte];
                 }
-                neighbors += (prev_line & (1 << (FONT_WIDTH - 1 - col))) ? 1 : 0;
-                if (col > 0) neighbors += (prev_line & (1 << (FONT_WIDTH - col))) ? 1 : 0;
-                if (col < FONT_WIDTH - 1) neighbors += (prev_line & (1 << (FONT_WIDTH - 2 - col))) ? 1 : 0;
-            }
-            if (row < FONT_HEIGHT - 1) {
-                uint32_t next_line = 0;
-                for (int byte = 0; byte < byte_width; byte++) {
-                    next_line = (next_line << 8) | font_bitmap[pos + (row + 1) * byte_width + byte];
+
+                for (int col = 0; col < FONT_WIDTH; col++) {
+                    int pixel = (line & (1 << (FONT_WIDTH - 1 - col))) ? 1 : 0;
+                    int grayscale = pixel ? 255 : 0;
+                    fb_putpixel(screen_x + col, screen_y + row, COLOR(grayscale, grayscale, grayscale));
                 }
-                neighbors += (next_line & (1 << (FONT_WIDTH - 1 - col))) ? 1 : 0;
-                if (col > 0) neighbors += (next_line & (1 << (FONT_WIDTH - col))) ? 1 : 0;
-                if (col < FONT_WIDTH - 1) neighbors += (next_line & (1 << (FONT_WIDTH - 2 - col))) ? 1 : 0;
             }
 
-            // map the number of set neighbors to a grayscale value
-            int grayscale = 0;
-            if (pixel) grayscale = 255; // fully on
-            else if (neighbors > 6) grayscale = 192; // mostly surrounded
-            else if (neighbors > 4) grayscale = 128; // partially surrounded
-            else if (neighbors > 2) grayscale = 64;  // slightly surrounded
-            else grayscale = 0; // off or no significant neighbors
+            screen_x += FONT_WIDTH;
 
-            fb_putpixel(screen_x + col, screen_y + row, COLOR(grayscale, grayscale, grayscale));
+            // Check if we need to move to the next line
+            if (screen_x + FONT_WIDTH >= width) {
+                screen_x = 0;
+                screen_y += FONT_HEIGHT;
+
+                // Scroll if the next line exceeds the screen height
+                if (screen_y >= height) {
+                    fb_scrollback(1);
+                    screen_y = height - FONT_HEIGHT;
+                }
+            }
+            break;
         }
     }
 
-    screen_x += FONT_WIDTH;
-end:
-    if (screen_x >= width) {
-        screen_y += FONT_HEIGHT;
-        screen_x = 0;
-    }
-    if (screen_y >= height) {
-        fb_scrollback(1);
-    }
     fb_set_cursor(screen_x, screen_y);
     cursor_show();
 }

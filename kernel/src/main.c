@@ -111,7 +111,5 @@ void _start(void) {
 
     init_systems();
 
-    __asm__ volatile("int $1");
-
     for (;;);
 }
