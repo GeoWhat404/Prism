@@ -10,10 +10,16 @@ Prism is licensed under the [MIT License](LICENSE). See the `LICENSE` file for m
 - Architecture: x86_64 (amd64)
   - [X] Interrupts: ISR, IRQ, GDT
   - [X] Generic: RTC
+- Drivers
+  - [ ] PS/2 Keyboard
+  - [ ] AHCI 
 - Memory
-  - [ ] Enable paging
-  - [ ] Physical memory manager
-  - [ ] Virtual meomry manager
+  - [X] Enable paging
+  - [X] Physical memory manager
+  - [X] Virtual meomry manager
+  - [ ] Malloc & Free
+- Filesystems
+  - [ ] Fat32 fs  
 - Processes
   - this is too far in the future LOL
 
