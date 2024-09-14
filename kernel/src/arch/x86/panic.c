@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
 #include <boot/boot.h>
 
@@ -65,16 +64,25 @@ char *get_function_name(uint64_t addr) {
     return "INVALID";
 }
 
+void print_panic_msg() {
+    log_fatal(MODULE_MAIN, "Kernel Panic");
+
+    fprintf(VFS_FD_STDERR, "\n--- < kernel panic > ---\n"
+                           "no need to panic though :)\n"
+                           "reason: ");
+}
+
+void print_panic_reason(const char *fmt, va_list ap) {
+    vfprintf(VFS_FD_STDERR, fmt, ap);
+}
+
 void panic(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
-    log_fatal(MODULE_MAIN, "Kernel Panic");
+    print_panic_msg();
+    print_panic_reason(fmt, ap);
 
-    fprintf(VFS_FD_STDERR, "\n--- < kernel panic > ---\n"
-                            "reason: ");
-    vfprintf(VFS_FD_STDERR, fmt, ap);
-    fprintf(VFS_FD_STDERR, "\n");
 
     asm_dump_regs();
 }
@@ -96,11 +104,15 @@ void stack_trace(int depth, uint64_t rbp, uint64_t rip) {
         printf("\n");
         stack = stack->rbp;
     }
-    printf(" | This is a very sad moment :(\n");
+    printf(" | This is a very sad moment :(\n"
+           " | Keep calm and cary on\n");
 }
 
 void dump_regs(registers_t *regs) {
     printf("-- < register dump > --\n");
+
+    uint64_t cr2;
+    __asm__ volatile("mov %%cr2, %0" : "=r"(cr2));
 
     printf("RIP=0x%016llx\n",
            regs->rip);
@@ -126,7 +138,9 @@ void dump_regs(registers_t *regs) {
            regs->rbp, regs->r14,
            regs->usermode_rsp, regs->r15);
 
+    printf("CR2=0x%016llx\n", cr2);
+
     stack_trace(10, regs->rbp, regs->rip);
 
-    fb_clear_color(COLOR(8, 39, 245));
+    fb_clear_color(COLOR(0, 0, 0), COLOR(0x88, 0xDF, 0x7C));
 }

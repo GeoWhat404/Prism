@@ -9,6 +9,7 @@
 #include <hal/pit.h>
 #include <hal/rtc.h>
 #include <hal/panic.h>
+#include <hal/detect.h>
 
 #include <util/debug.h>
 #include <util/defines.h>
@@ -73,10 +74,16 @@ static void hcf(void) {
     panic("halt catch fire");
 }
 
+void map_pages() {
+    // framebuffer
+}
+
 void init_mmu() {
     pmm_initialize();
     vmm_initialize();
     paging_initialize();
+
+    memory_print();
 
     struct limine_memmap_entry *region = pmm_get_first_free_region();
     heap_init(region->base, region->length);
@@ -88,19 +95,21 @@ void init_mmu() {
 
 void init_systems() {
     fb_initialize(boot_info.lfb);
+    //fb_clear_color(COLOR(0xF9, 0xD1, 0x42), COLOR(0x29, 0x28, 0x26));
+    //fb_clear_color(COLOR(0, 0, 0), COLOR(255, 255, 255));
 
     printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
     log_info(MODULE_MAIN, "Prism Kernel loaded");
 
+    printf("\n--- < cpu detection > ---\n");
+    detect_cpu();
+    printf("--- < cpu detection > ---\n\n");
+
     hal_initialize();
     printf("HAL Initialized\n");
 
-
-    //panic("asd");
-
     init_mmu();
 
-    memory_print();
     datetime_t time = rtc_get_datetime();
     printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",
            time.hours, time.minutes, time.seconds,

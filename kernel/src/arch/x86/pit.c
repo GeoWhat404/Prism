@@ -1,6 +1,8 @@
 #include "pit.h"
 #include "irq.h"
 
+#include <stdio.h>
+
 static uint64_t ticks = 0;
 static bool running = true;
 

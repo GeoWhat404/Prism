@@ -9,9 +9,13 @@ all: $(IMAGE_NAME).iso
 .PHONY: all-hdd
 all-hdd: $(IMAGE_NAME).hdd
 
+.PHONY: dbg
+dbg: $(IMAGE_NAME).iso
+	qemu-system-x86_64 -s -S -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d -rtc base=localtime
+
 .PHONY: run
 run: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d -rtc base=localtime
+	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d -rtc base=localtime -device VGA,edid=on,xres=1920,yres=1080
 
 .PHONY: run-uefi
 run-uefi: ovmf $(IMAGE_NAME).iso

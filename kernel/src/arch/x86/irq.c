@@ -21,6 +21,11 @@ void irq_handle_interrupt(registers_t *regs) {
     i8259_send_eoi(irq);
 }
 
+static void kbd_callback(registers_t *regs) {
+    printf("kbd!\n");
+    inb(0x60);
+}
+
 void irq_initialize() {
     i8259_remap(PIC_REMAP_OFFSET);
 
@@ -40,6 +45,10 @@ void irq_initialize() {
     i8259_unmask(IRQ1);
     i8259_unmask(IRQ2);
     i8259_unmask(IRQ8);
+
+    irq_register_handler(IRQ1, kbd_callback);
+    outb(0x64, 0xAE);
+    io_wait();
 }
 
 void irq_register_handler(int irq, pfn_irq_handler handler) {

@@ -47,13 +47,8 @@ char *exceptions[] = {
     "Reserved"};
 
 static void page_fault_handler(registers_t *regs) {
-    uint64_t addr;
-    __asm__ volatile("mov %%cr2, %0" : "=r"(addr));
-
-    log_fatal(MODULE_MAIN, "Page Fault at 0x%016llx", addr);
-    fprintf(stderr, "\n--- < kernel panic > ---\n"
-                    "reason: Page Fault\n"
-                    "offending address: 0x%llx\n", addr);
+    print_panic_msg();
+    print_panic_reason("Page Fault\n", 0);
 
     dump_regs(regs);
 

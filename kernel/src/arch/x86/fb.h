@@ -10,7 +10,7 @@
 
 void fb_initialize(struct limine_framebuffer *lfb);
 void fb_clrscr();
-void fb_clear_color(uint32_t new_color);
+void fb_clear_color(uint32_t new_fg, uint32_t new_bg);
 void fb_putc(char c);
 int fb_get_screen_x();
 int fb_get_screen_y();

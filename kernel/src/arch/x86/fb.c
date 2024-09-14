@@ -1,5 +1,6 @@
 #include "fb.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <util/debug.h>
 #include <util/defines.h>
@@ -7,11 +8,11 @@
 
 #define CURSOR_WIDTH FONT_WIDTH
 #define CURSOR_HEIGHT FONT_HEIGHT
+
 #define BLINK_INTERVAL 9
 
 #define COLOR_TEMP(x) COLOR(x * 255, x * 255, x * 255)
 
-static struct limine_framebuffer *lfb;
 static uint32_t *fb;
 static uint32_t width;
 static uint32_t height;
@@ -23,6 +24,7 @@ static uint32_t cursor_x;
 static uint32_t cursor_y;
 static uint32_t background_color = COLOR(0, 0, 0);
 static uint32_t foreground_color = COLOR(255, 255, 255);
+static struct limine_framebuffer *lfb;
 
 static bool should_show_cursor = false;
 static bool cursor_visible = false;
@@ -87,6 +89,9 @@ void fb_initialize(struct limine_framebuffer *_lfb) {
 
     screen_x = 0;
     screen_y = 0;
+
+    background_color = COLOR(0, 0, 0);
+    foreground_color = COLOR(255, 255, 255);
 }
 
 void fb_clrscr() {
@@ -104,15 +109,17 @@ void fb_clrscr() {
     fb_set_cursor(screen_x, screen_y);
 }
 
-void fb_clear_color(uint32_t new_color) {
+void fb_clear_color(uint32_t new_fg, uint32_t new_bg) {
     for (uint32_t y = 0; y < lfb->height; y++) {
         for (uint32_t x = 0; x < lfb->width; x++) {
             if (fb[y * pitch / 4 + x] != background_color)
-                continue;
-            fb_putpixel(x, y, new_color);
+                fb_putpixel(x, y, new_fg);
+            else
+                fb_putpixel(x, y, new_bg);
         }
     }
-    background_color = new_color;
+    background_color = new_bg;
+    foreground_color = new_fg;
 }
 
 int fb_get_color(int x, int y) {
@@ -185,8 +192,8 @@ void fb_putc(char c) {
 
                 for (int col = 0; col < FONT_WIDTH; col++) {
                     int pixel = (line & (1 << (FONT_WIDTH - 1 - col))) ? 1 : 0;
-                    int grayscale = pixel ? 255 : 0;
-                    fb_putpixel(screen_x + col, screen_y + row, COLOR(grayscale, grayscale, grayscale));
+                    int color = pixel ? foreground_color : background_color;
+                    fb_putpixel(screen_x + col, screen_y + row, color);
                 }
             }
 
