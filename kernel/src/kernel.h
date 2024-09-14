@@ -1,3 +1,3 @@
 #pragma once
 
-void kmain();
+void kmain(void);

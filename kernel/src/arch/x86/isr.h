@@ -46,6 +46,6 @@ typedef struct {
 
 typedef void (*pfn_isr_handler)(registers_t *regs);
 
-void isr_initialize();
+void isr_initialize(void);
 void isr_handle_interrupt(uint64_t rsp);
 void isr_register_handler(int interrupt, pfn_isr_handler handler);

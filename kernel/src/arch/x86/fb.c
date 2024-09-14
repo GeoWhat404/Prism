@@ -41,7 +41,7 @@ static void fb_getpixel(uint32_t x, uint32_t y, uint32_t *color) {
         *color = fb[y * pitch / 4 + x];
 }
 
-static void cursor_hide() {
+static void cursor_hide(void) {
     if (!cursor_visible)
         return;
 
@@ -54,7 +54,7 @@ static void cursor_hide() {
     cursor_visible = false;
 }
 
-static void cursor_show() {
+static void cursor_show(void) {
     if (cursor_visible || !should_show_cursor)
         return;
 
@@ -94,7 +94,7 @@ void fb_initialize(struct limine_framebuffer *_lfb) {
     foreground_color = COLOR(255, 255, 255);
 }
 
-void fb_clrscr() {
+void fb_clrscr(void) {
     cursor_hide();
 
     for (uint32_t y = 0; y < lfb->height; y++) {
@@ -218,11 +218,11 @@ void fb_putc(char c) {
     cursor_show();
 }
 
-int fb_get_screen_x() {
+int fb_get_screen_x(void) {
     return screen_x;
 }
 
-int fb_get_screen_y() {
+int fb_get_screen_y(void) {
     return screen_y;
 }
 

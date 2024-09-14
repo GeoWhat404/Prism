@@ -56,5 +56,5 @@ typedef struct gdt_ptr_t {
 	uint64_t base;
 } _packed gdt_ptr_t;
 
-void gdt_initialize();
+void gdt_initialize(void);
 

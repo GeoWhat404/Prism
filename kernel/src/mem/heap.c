@@ -44,7 +44,7 @@ void heap_init(void *heap_addr, size_t size) {
     printf("Heap: Completed Initialization\n\n");
 }
 
-void heap_print() {
+void heap_print(void) {
     heap_blk_t *ptr = root_blk;
     printf("Heap: Dumping the heap\n");
     do {

@@ -10,7 +10,7 @@
 #include <util/elf.h>
 #include <util/debug.h>
 
-extern void asm_dump_regs();
+extern void asm_dump_regs(void);
 
 typedef struct stack_frame_t {
     struct stack_frame_t *rbp;
@@ -64,7 +64,7 @@ char *get_function_name(uint64_t addr) {
     return "INVALID";
 }
 
-void print_panic_msg() {
+void print_panic_msg(void) {
     log_fatal(MODULE_MAIN, "Kernel Panic");
 
     fprintf(VFS_FD_STDERR, "\n--- < kernel panic > ---\n"

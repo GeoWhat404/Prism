@@ -1,7 +1,7 @@
 #include "cmos.h"
 #include "port.h"
 
-bool cmos_is_busy() {
+bool cmos_is_busy(void) {
     // read from status register A and
     // disable NMIs by setting the 0x80 bit
     outb(CMOS_ADDR_REG, 0x8A);

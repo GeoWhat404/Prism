@@ -24,15 +24,15 @@
 #define PIC_EOI             0x20
 
 void i8259_remap(int offset);
-void i8259_disable();
+void i8259_disable(void);
 void i8259_send_eoi(int irq);
 
 void i8259_set_mask(uint16_t new_mask);
-uint16_t i8259_get_mask();
+uint16_t i8259_get_mask(void);
 
 void i8259_mask(int irq);
 void i8259_unmask(int irq);
-void i8259_mask_all();
-void i8259_unmask_all();
+void i8259_mask_all(void);
+void i8259_unmask_all(void);
 
-bool i8259_probe();
+bool i8259_probe(void);

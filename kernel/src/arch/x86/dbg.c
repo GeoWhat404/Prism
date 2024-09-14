@@ -6,11 +6,11 @@
 _cdecl void handle_tssrsp(uint64_t rsp) {
 }
 
-_cdecl void syscall_handler() {
+_cdecl void syscall_handler(void) {
 }
 
-_cdecl void handle_syscall_tssrsp() {
+_cdecl void handle_syscall_tssrsp(void) {
 }
 
-_cdecl void task_kill_cleanup() {
+_cdecl void task_kill_cleanup(void) {
 }

@@ -24,7 +24,7 @@ void gdt_load_tss(tss_ptr_t *tss) {
 	asm volatile("ltr %0" : : "rm"((uint16_t)0x58) : "memory");
 }
 
-void gdt_reload() {
+void gdt_reload(void) {
   asm volatile("lgdt %0\n\t"
                "push $0x28\n\t"
                "lea 1f(%%rip), %%rax\n\t"
@@ -42,7 +42,7 @@ void gdt_reload() {
                : "rax", "memory");
 }
 
-void gdt_initialize() {
+void gdt_initialize(void) {
 	// Null descriptor. (0)
 	gdt.descriptors[0].limit = 0;
 	gdt.descriptors[0].base_low = 0;

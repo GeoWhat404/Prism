@@ -16,6 +16,6 @@
 #define IDT_DESCRIPTOR_EXCEPTION        (IDT_DESCRIPTOR_PRESENT | IDT_DESCRIPTOR_X32_INTERRUPT)
 #define IDT_SYSCALL                     0x80
 
-void idt_initialize();
-void idt_load();
+void idt_initialize(void);
+void idt_load(void);
 void idt_set_gate(int interrupt, uint64_t handler, uint8_t flags);

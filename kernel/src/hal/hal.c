@@ -9,7 +9,7 @@
 
 #include <util/debug.h>
 
-void hal_initialize() {
+void hal_initialize(void) {
     gdt_initialize();
     log_info(MODULE_HAL, "GDT Initialized");
 

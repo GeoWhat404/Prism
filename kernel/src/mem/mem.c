@@ -25,7 +25,7 @@ static const char *mem_region_names[] = {
     [LIMINE_MEMMAP_FRAMEBUFFER]             = "Framebuffer"
 };
 
-void mem_print_layout() {
+void mem_print_layout(void) {
     size_t total = 0;
 
     printf("MEM: Printing layout\n");
@@ -49,7 +49,7 @@ void mem_print_layout() {
     printf("MEM: Total memory: %llu\n\n", total);
 }
 
-void mem_init() {
+void mem_init(void) {
     mem_bitmap_t bitmap = pmm_initialize();
 
     vmm_init(bitmap);

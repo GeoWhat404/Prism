@@ -55,7 +55,7 @@ static void page_fault_handler(registers_t *regs) {
     __asm__ ("cli; hlt");
 }
 
-void isr_initialize() {
+void isr_initialize(void) {
     // ISR exceptions 0 - 31
     for (int i = 0; i < 48; i++) {
         idt_set_gate(i, (uint64_t)isr_stub_table[i], IDT_DESCRIPTOR_EXCEPTION);

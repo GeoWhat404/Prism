@@ -23,7 +23,7 @@
 #include <boot/boot.h>
 #include <boot/limine.h>
 
-void init_mmu() {
+void init_mmu(void) {
     mem_init();
 
     mem_print_layout();
@@ -32,7 +32,7 @@ void init_mmu() {
     log_info(MODULE_MAIN, "MMU Initialized");
 }
 
-void init_systems() {
+void init_systems(void) {
     fb_initialize(boot_info.lfb);
 
     printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));

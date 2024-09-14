@@ -6,7 +6,7 @@
 
 #define INVALID_PHYS    (1ull << 52)
 
-mem_bitmap_t pmm_initialize();
+mem_bitmap_t pmm_initialize(void);
 
 bool pmm_reserve_mem(const phys_addr_t phys, const size_t bytes);
 bool pmm_free_mem(const phys_addr_t phys, const size_t bytes);
