@@ -98,13 +98,13 @@ void stack_trace(int depth, uint64_t rbp, uint64_t rip) {
 
     stack_frame_t *stack = (stack_frame_t *)rbp;
 
-    while (stack && --depth) {
+    do {
         printf("0x%016llx ", stack->rip);
         if (stack->rip)
             printf("\t%s", get_function_name(stack->rip));
         printf("\n");
         stack = stack->rbp;
-    }
+    } while (stack && --depth && stack->rip);
     printf(" | This is a very sad moment :(\n");
 }
 
