@@ -22,7 +22,6 @@ void irq_handle_interrupt(registers_t *regs) {
 }
 
 static void kbd_callback(registers_t *regs) {
-    printf("kbd!\n");
     inb(0x60);
 }
 

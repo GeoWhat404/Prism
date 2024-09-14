@@ -18,6 +18,7 @@
 #include <mem/mem.h>
 #include <mem/pmm.h>
 #include <mem/vmm.h>
+#include <mem/heap.h>
 
 #include <boot/boot.h>
 #include <boot/limine.h>
@@ -78,10 +79,9 @@ void map_pages() {
 
 void init_mmu() {
 
-    mem_bitmap_t bitmap = pmm_initialize();
+    mem_init();
 
-    vmm_init(bitmap);
-    vmm_print_memmap();
+    mem_print_layout();
 
     printf("MMU Components Initialized\n");
     log_info(MODULE_MAIN, "MMU Initialized");
@@ -139,6 +139,14 @@ void _start(void) {
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
     init_systems();
+
+    heap_print();
+    void *ptr = kmalloc(123);
+    heap_print();
+    kfree(ptr);
+    heap_print();
+
+    kfree(0);
 
     for (;;);
 }

@@ -17,7 +17,7 @@ Prism is licensed under the [MIT License](LICENSE). See the `LICENSE` file for m
   - [X] Enable paging
   - [X] Physical memory manager
   - [X] Virtual meomry manager
-  - [ ] Malloc & Free
+  - [X] Malloc & Free
 - Filesystems
   - [ ] Fat32 fs  
 - Processes

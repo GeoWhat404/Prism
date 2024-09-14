@@ -15,6 +15,9 @@ typedef struct {
     size_t size;
 } mem_bitmap_t;
 
+void mem_init();
+void mem_print_layout();
+
 static inline virt_addr_t mem_phys_to_virt(const phys_addr_t phys) {
     return (virt_addr_t)(phys + boot_info.lhhdmr->offset);
 }
