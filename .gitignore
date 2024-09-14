@@ -8,4 +8,5 @@ kernel/obj/
 *.iso
 *.o
 *.efi
+*.hdd
 limine.conf

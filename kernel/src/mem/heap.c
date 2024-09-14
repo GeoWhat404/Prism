@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <hal/panic.h>
+#include <util/debug.h>
 
 typedef struct heap_blk {
     size_t length;
@@ -111,7 +112,7 @@ void *kmalloc(size_t size) {
 
 void kfree(void *ptr) {
     if (!ptr)
-        panic("Exception in kernel java.lang.NullPointerException");
+        panic("cannot free a null pointer");
 
     heap_blk_t *blk = ptr - sizeof(heap_blk_t);
     blk->free = 1;

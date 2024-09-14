@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <boot/boot.h>
+#include <util/debug.h>
 #include <boot/limine.h>
 
 #define HEAP_INITIALIZE_SIZE (0x1000 * 20)
@@ -28,6 +29,7 @@ void mem_print_layout() {
     size_t total = 0;
 
     printf("MEM: Printing layout\n");
+    log_debug(MODULE_MMU, "Printing layout");
 
     struct limine_memmap_entry *entry;
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
@@ -38,6 +40,11 @@ void mem_print_layout() {
         printf(" | 0x%016x -> 0x%016x size: %011llu %s\n",
                entry->base, entry->base + entry->length - 1,
                entry->length, mem_region_names[entry->type]);
+
+        log_debug(MODULE_MMU, " | 0x%016x -> 0x%016x size: %011llu %s",
+               entry->base, entry->base + entry->length - 1,
+               entry->length, mem_region_names[entry->type]);
+
     }
     printf("MEM: Total memory: %llu\n\n", total);
 }

@@ -1,25 +1,8 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stddef.h>
+#include "kernel.h"
+
 #include <stdbool.h>
 
-#include <hal/fb.h>
-#include <hal/hal.h>
-#include <hal/pit.h>
-#include <hal/rtc.h>
 #include <hal/panic.h>
-#include <hal/detect.h>
-
-#include <util/debug.h>
-#include <util/defines.h>
-#include <util/datetime.h>
-
-#include <mem/mem.h>
-#include <mem/pmm.h>
-#include <mem/vmm.h>
-#include <mem/heap.h>
-
 #include <boot/boot.h>
 #include <boot/limine.h>
 
@@ -73,43 +56,6 @@ static void hcf(void) {
     panic("halt catch fire");
 }
 
-void map_pages() {
-    // framebuffer
-}
-
-void init_mmu() {
-
-    mem_init();
-
-    mem_print_layout();
-
-    printf("MMU Components Initialized\n");
-    log_info(MODULE_MAIN, "MMU Initialized");
-}
-
-void init_systems() {
-    fb_initialize(boot_info.lfb);
-
-    printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
-    log_info(MODULE_MAIN, "Prism Kernel loaded");
-
-    printf("\n--- < cpu detection > ---\n");
-    detect_cpu();
-    printf("--- < cpu detection > ---\n\n");
-
-    hal_initialize();
-    printf("HAL Initialized\n");
-
-    init_mmu();
-
-    datetime_t time = rtc_get_datetime();
-    printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",
-           time.hours, time.minutes, time.seconds,
-           time.days, time.months, time.years);
-
-    printf("Initial setup complete in %llus\n", pit_get_seconds());
-}
-
 void _start(void) {
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
@@ -120,7 +66,7 @@ void _start(void) {
         panic("lvl4 paging not supported");
     }
 
-    if (framebuffer_request.response == NULL
+    if (framebuffer_request.response == 0
      || framebuffer_request.response->framebuffer_count < 1) {
         hcf();
     }
@@ -138,15 +84,7 @@ void _start(void) {
     boot_info.kernel_phys_base = kernel_addr->physical_base;
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
-    init_systems();
+    kmain();
 
-    heap_print();
-    void *ptr = kmalloc(123);
-    heap_print();
-    kfree(ptr);
-    heap_print();
-
-    kfree(0);
-
-    for (;;);
+    panic("kmain() returned");
 }
