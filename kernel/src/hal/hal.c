@@ -7,7 +7,6 @@
 #include "pit.h"
 #include "rtc.h"
 
-#include <mem/paging.h>
 #include <util/debug.h>
 
 void hal_initialize() {

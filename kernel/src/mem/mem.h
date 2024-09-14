@@ -1,7 +1,24 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
-uint64_t memory_get_total();
+#include <boot/boot.h>
 
-void memory_print();
+#define PAGE_BYTE_SIZE 4096
+
+typedef void       *virt_addr_t;
+typedef uintptr_t   phys_addr_t;
+
+typedef struct {
+    virt_addr_t virt;
+    size_t size;
+} mem_bitmap_t;
+
+static inline virt_addr_t mem_phys_to_virt(const phys_addr_t phys) {
+    return (virt_addr_t)(phys + boot_info.lhhdmr->offset);
+}
+
+static inline phys_addr_t mem_virt_to_phys(const virt_addr_t virt) {
+    return (phys_addr_t)(virt - boot_info.lhhdmr->offset);
+}

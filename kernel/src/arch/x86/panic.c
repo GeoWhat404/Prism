@@ -74,6 +74,7 @@ void print_panic_msg() {
 
 void print_panic_reason(const char *fmt, va_list ap) {
     vfprintf(VFS_FD_STDERR, fmt, ap);
+    fprintf(VFS_FD_STDERR, "\n");
 }
 
 void panic(const char *fmt, ...) {
@@ -104,8 +105,7 @@ void stack_trace(int depth, uint64_t rbp, uint64_t rip) {
         printf("\n");
         stack = stack->rbp;
     }
-    printf(" | This is a very sad moment :(\n"
-           " | Keep calm and cary on\n");
+    printf(" | This is a very sad moment :(\n");
 }
 
 void dump_regs(registers_t *regs) {

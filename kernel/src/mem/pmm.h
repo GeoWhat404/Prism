@@ -1,9 +1,15 @@
 #pragma once
 
+#include "mem.h"
+#include <stdbool.h>
 #include <boot/limine.h>
-#include <util/dstructs/bitmap.h>
 
-bitmap_t phys;
+#define INVALID_PHYS    (1ull << 52)
 
-void pmm_initialize();
-struct limine_memmap_entry *pmm_get_first_free_region();
+mem_bitmap_t pmm_initialize();
+
+bool pmm_reserve_mem(const phys_addr_t phys, const size_t bytes);
+bool pmm_free_mem(const phys_addr_t phys, const size_t bytes);
+
+phys_addr_t pmm_alloc_mem(const size_t bytes);
+bool pmm_dealloc_mem(const phys_addr_t phys, const size_t bytes);

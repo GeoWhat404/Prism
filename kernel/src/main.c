@@ -18,8 +18,6 @@
 #include <mem/mem.h>
 #include <mem/pmm.h>
 #include <mem/vmm.h>
-#include <mem/paging.h>
-#include <mem/heap/heap.h>
 
 #include <boot/boot.h>
 #include <boot/limine.h>
@@ -79,15 +77,11 @@ void map_pages() {
 }
 
 void init_mmu() {
-    pmm_initialize();
-    vmm_initialize();
-    paging_initialize();
 
-    memory_print();
+    mem_bitmap_t bitmap = pmm_initialize();
 
-    struct limine_memmap_entry *region = pmm_get_first_free_region();
-    heap_init(region->base, region->length);
-    //heap_init(0x100000, 2145320960);
+    vmm_init(bitmap);
+    vmm_print_memmap();
 
     printf("MMU Components Initialized\n");
     log_info(MODULE_MAIN, "MMU Initialized");
@@ -95,8 +89,6 @@ void init_mmu() {
 
 void init_systems() {
     fb_initialize(boot_info.lfb);
-    //fb_clear_color(COLOR(0xF9, 0xD1, 0x42), COLOR(0x29, 0x28, 0x26));
-    //fb_clear_color(COLOR(0, 0, 0), COLOR(255, 255, 255));
 
     printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
     log_info(MODULE_MAIN, "Prism Kernel loaded");
