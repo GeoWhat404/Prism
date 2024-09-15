@@ -8,9 +8,6 @@ static gdt_ptr_t gdtr;
 static tss_ptr_t tss;
 
 void gdt_load_tss(tss_ptr_t *tss) {
-    if (tss == 0)
-        return;
-
 	size_t addr = (size_t)tss;
 
 	gdt.tss.base_low = (uint16_t)addr;

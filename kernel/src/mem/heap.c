@@ -112,7 +112,7 @@ void *kmalloc(size_t size) {
 
 void kfree(void *ptr) {
     if (!ptr)
-        panic("cannot free a null pointer");
+        panic("Exception in thread \"main\" java.lang.NullPointerException");
 
     heap_blk_t *blk = ptr - sizeof(heap_blk_t);
     blk->free = 1;

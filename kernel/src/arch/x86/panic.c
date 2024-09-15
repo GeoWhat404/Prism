@@ -10,7 +10,7 @@
 #include <util/elf.h>
 #include <util/debug.h>
 
-extern void asm_dump_regs(void);
+extern __attribute__((noreturn)) void asm_dump_regs(void);
 
 typedef struct stack_frame_t {
     struct stack_frame_t *rbp;
@@ -22,7 +22,6 @@ char *get_function_name(uint64_t addr) {
         return "ERROR";
 
     char *krnl_file_start = (char *)boot_info.lkrnl->address;
-    uint64_t krnl_file_size = boot_info.lkrnl->size;
 
     if (!elf_is_hdr_valid(krnl_file_start)) {
         return "INVALID";
@@ -78,12 +77,12 @@ void print_panic_reason(const char *fmt, va_list ap) {
 }
 
 void panic(const char *fmt, ...) {
+
     va_list ap;
     va_start(ap, fmt);
 
     print_panic_msg();
     print_panic_reason(fmt, ap);
-
 
     asm_dump_regs();
 }

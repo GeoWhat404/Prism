@@ -3,7 +3,7 @@ override MAKEFLAGS += -rR
 
 override IMAGE_NAME := prism
 
-QEMU_FLAGS= -rtc base=localtime -device VGA,edid=on,xres=1920,yres=1080
+QEMU_FLAGS= -rtc base=localtime -device VGA,edid=on,xres=2560,yres=1440 -m 8G
 
 .PHONY: all
 all: $(IMAGE_NAME).iso
@@ -13,22 +13,22 @@ all-hdd: $(IMAGE_NAME).hdd
 
 .PHONY: dbg
 dbg: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -s -S -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
+	qemu-system-x86_64 -s -S -debugcon stdio -M q35 -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
 .PHONY: run
 run: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
+	qemu-system-x86_64 -debugcon stdio -M q35 -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
 
 .PHONY: run-uefi
 run-uefi: ovmf $(IMAGE_NAME).iso
-	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -bios ovmf/OVMF.fd -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
+	qemu-system-x86_64 -debugcon stdio -M q35 -bios ovmf/OVMF.fd -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
 
 .PHONY: run-hdd
 run-hdd: $(IMAGE_NAME).hdd
-	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -hda $(IMAGE_NAME).hdd $(QEMU_FLAGS)
+	qemu-system-x86_64 -debugcon stdio -M q35 -hda $(IMAGE_NAME).hdd $(QEMU_FLAGS)
 
 .PHONY: run-hdd-uefi
 run-hdd-uefi: ovmf $(IMAGE_NAME).hdd
-	qemu-system-x86_64 -debugcon stdio -M q35 -m 2G -bios ovmf/OVMF.fd -hda $(IMAGE_NAME).hdd $(QEMU_FLAGS)
+	qemu-system-x86_64 -debugcon stdio -M q35 -bios ovmf/OVMF.fd -hda $(IMAGE_NAME).hdd $(QEMU_FLAGS)
 
 .PHONY: run-bios
 run-bios: $(IMAGE_NAME).iso

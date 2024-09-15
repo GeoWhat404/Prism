@@ -28,7 +28,7 @@ static void populate_datetime(datetime_t *out) {
 }
 
 static void calculate_time(void) {
-    uint8_t reg_b_val;
+    uint8_t reg_b_val = 0;
     datetime_t new, old;
 
     while (cmos_is_busy());

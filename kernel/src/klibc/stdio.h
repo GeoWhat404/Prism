@@ -8,7 +8,7 @@ extern const int stdout;
 extern const int stderr;
 extern const int stddbg;
 
-void fputc(char c, fd_t fd);
+void fputc(uint8_t c, fd_t fd);
 void fputs(const char *str, fd_t fd);
 void vfprintf(fd_t fd, const char *fmt, va_list args);
 void fprintf(fd_t fd, const char *fmt, ...);

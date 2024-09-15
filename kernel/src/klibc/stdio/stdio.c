@@ -24,7 +24,7 @@ const int stdout = VFS_FD_STDOUT;
 const int stderr = VFS_FD_STDERR;
 const int stddbg = VFS_FD_DEBUG;
 
-void fputc(char c, fd_t fd) {
+void fputc(uint8_t c, fd_t fd) {
     vfs_write(fd, &c, sizeof(c));
 }
 
