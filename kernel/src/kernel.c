@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -9,6 +8,7 @@
 #include <hal/pit.h>
 #include <hal/rtc.h>
 #include <hal/panic.h>
+#include <hal/instr.h>
 #include <hal/detect.h>
 
 #include <util/debug.h>
@@ -58,5 +58,7 @@ void kmain(void) {
     init_systems();
     printf("Initial setup complete in %llus\n", pit_get_seconds());
 
-    for (;;);
+    while (1) {
+        hlt();
+    }
 }

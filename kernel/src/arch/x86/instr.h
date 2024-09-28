@@ -15,3 +15,15 @@ static inline void write_cr3(uint64_t cr3) {
 static inline void flush_tlb(uintptr_t virt) {
     __asm__ volatile("invlpg (%0)" ::"r"(virt) : "memory");
 }
+
+static inline void cli() {
+    __asm__ volatile("cli");
+}
+
+static inline void sti() {
+    __asm__ volatile("sti");
+}
+
+static inline void hlt() {
+    __asm__ volatile("hlt");
+}
