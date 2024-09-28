@@ -1,6 +1,6 @@
 #include "idt.h"
 #include "gdt.h"
-#include "port.h"
+#include "instr.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <util/debug.h>
@@ -33,7 +33,7 @@ void idt_load(void) {
     __asm__ volatile("lidt %0" : : "m"(idt_desc));
 
     // Set the interrupt flag
-    __asm__ volatile("sti");
+    sti();
 }
 
 void idt_set_gate(int interrupt, uint64_t handler, uint8_t flags) {

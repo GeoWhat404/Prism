@@ -1,62 +1,15 @@
-/*
- * Copyright (c) 2006-2007 -  http://brynet.biz.tm - <brynet@gmail.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+#include <cpuid.h>
+#include <stdio.h>
 
-/* You need to include a file with fairly(ish) compliant printf prototype, Decimal and String support like %s and %d and this is truely all you need! */
-#include <stdio.h> /* for printf(); */
+#define cpuid(in, a, b, c, d)   \
+    __asm__ volatile("cpuid": "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(in));
 
-/* Required Declarations */
 
-int do_intel(void);
-int do_amd(void);
-void printregs(int eax, int ebx, int ecx, int edx);
+int handle_intel(void);
+int handle_amd(void);
 
-#define cpuid(in, a, b, c, d) __asm__("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in));
-
-/* Simply call this function detect_cpu(); */
-int detect_cpu(void) { /* or main() if your trying to port this as an independant application */
-	unsigned long ebx, unused;
-	cpuid(0, unused, ebx, unused, unused);
-	switch(ebx) {
-		case 0x756e6547: /* Intel Magic Code */
-		do_intel();
-		break;
-		case 0x68747541: /* AMD Magic Code */
-		do_amd();
-		break;
-		default:
-		printf("Unknown x86 CPU Detected\n");
-		break;
-	}
-	return 0;
-}
-
-/* Intel Specific brand list */
-char *Intel[] = {
-	"Brand ID Not Supported.", 
+char *intel_models[] = {
+    "Brand ID Not Supported.", 
 	"Intel(R) Celeron(R) processor", 
 	"Intel(R) Pentium(R) III processor", 
 	"Intel(R) Pentium(R) III Xeon(R) processor", 
@@ -82,9 +35,8 @@ char *Intel[] = {
 	"Mobile Intel(R) Celeron(R) processor"
 };
 
-/* This table is for those brand strings that have two values depending on the processor signature. It should have the same number of entries as the above table. */
-char *Intel_Other[] = {
-	"Reserved", 
+char *intel_other[] = {
+    "Reserved", 
 	"Reserved", 
 	"Reserved", 
 	"Intel(R) Celeron(R) processor", 
@@ -105,173 +57,28 @@ char *Intel_Other[] = {
 	"Reserved", 
 	"Reserved", 
 	"Reserved", 
-	"Reserved", 
+	"Reserved",
 	"Reserved", 
 	"Reserved"
 };
 
-/* Intel-specific information */
-int do_intel(void) {
-	printf("Intel Specific Features:\n");
-	unsigned long eax, ebx, ecx, edx, max_eax, signature, unused;
-	int model, family, type, brand, stepping, reserved;
-	int extended_family = -1;
-	cpuid(1, eax, ebx, unused, unused);
-	model = (eax >> 4) & 0xf;
-	family = (eax >> 8) & 0xf;
-	type = (eax >> 12) & 0x3;
-	brand = ebx & 0xff;
-	stepping = eax & 0xf;
-	reserved = eax >> 14;
-	signature = eax;
-	printf("\tType %d - ", type);
-	switch(type) {
-		case 0:
-		printf("Original OEM");
-		break;
-		case 1:
-		printf("Overdrive");
-		break;
-		case 2:
-		printf("Dual-capable");
-		break;
-		case 3:
-		printf("Reserved");
-		break;
-	}
-	printf("\n");
-	printf("Family %d - ", family);
-	switch(family) {
-		case 3:
-		printf("i386");
-		break;
-		case 4:
-		printf("i486");
-		break;
-		case 5:
-		printf("Pentium");
-		break;
-		case 6:
-		printf("Pentium Pro");
-		break;
-		case 15:
-		printf("Pentium 4");
-	}
-	printf("\n");
-	if(family == 15) {
-		extended_family = (eax >> 20) & 0xff;
-		printf("Extended family %d\n", extended_family);
-	}
-	printf("Model %d - ", model);
-	switch(family) {
-		case 3:
-		break;
-		case 4:
-		switch(model) {
-			case 0:
-			case 1:
-			printf("DX");
-			break;
-			case 2:
-			printf("SX");
-			break;
-			case 3:
-			printf("487/DX2");
-			break;
-			case 4:
-			printf("SL");
-			break;
-			case 5:
-			printf("SX2");
-			break;
-			case 7:
-			printf("Write-back enhanced DX2");
-			break;
-			case 8:
-			printf("DX4");
-			break;
-		}
-		break;
-		case 5:
-		switch(model) {
-			case 1:
-			printf("60/66");
-			break;
-			case 2:
-			printf("75-200");
-			break;
-			case 3:
-			printf("for 486 system");
-			break;
-			case 4:
-			printf("MMX");
-			break;
-		}
-		break;
-		case 6:
-		switch(model) {
-			case 1:
-			printf("Pentium Pro");
-			break;
-			case 3:
-			printf("Pentium II Model 3");
-			break;
-			case 5:
-			printf("Pentium II Model 5/Xeon/Celeron");
-			break;
-			case 6:
-			printf("Celeron");
-			break;
-			case 7:
-			printf("Pentium III/Pentium III Xeon - external L2 cache");
-			break;
-			case 8:
-			printf("Pentium III/Pentium III Xeon - internal L2 cache");
-			break;
-		}
-		break;
-		case 15:
-		break;
-	}
-	printf("\n");
-	cpuid(0x80000000, max_eax, unused, unused, unused);
-	/* Quok said: If the max extended eax value is high enough to support the processor brand string
-	(values 0x80000002 to 0x80000004), then we'll use that information to return the brand information. 
-	Otherwise, we'll refer back to the brand tables above for backwards compatibility with older processors. 
-	According to the Sept. 2006 Intel Arch Software Developer's Guide, if extended eax values are supported, 
-	then all 3 values for the processor brand string are supported, but we'll test just to make sure and be safe. */
-	if(max_eax >= 0x80000004) {
-		printf("Brand: ");
-		if(max_eax >= 0x80000002) {
-			cpuid(0x80000002, eax, ebx, ecx, edx);
-			printregs(eax, ebx, ecx, edx);
-		}
-		if(max_eax >= 0x80000003) {
-			cpuid(0x80000003, eax, ebx, ecx, edx);
-			printregs(eax, ebx, ecx, edx);
-		}
-		if(max_eax >= 0x80000004) {
-			cpuid(0x80000004, eax, ebx, ecx, edx);
-			printregs(eax, ebx, ecx, edx);
-		}
-		printf("\n");
-	} else if(brand > 0) {
-		printf("Brand %d - ", brand);
-		if(brand < 0x18) {
-			if(signature == 0x000006B1 || signature == 0x00000F13) {
-				printf("%s\n", Intel_Other[brand]);
-			} else {
-				printf("%s\n", Intel[brand]);
-			}
-		} else {
-			printf("Reserved\n");
-		}
-	}
-	printf("Stepping: %d Reserved: %d\n", stepping, reserved);
-	return 0;
+int detect_cpu(void) {
+    uint32_t ebx, unused;
+
+    cpuid(0, unused, ebx, unused, unused);
+
+    switch (ebx) {
+        case signature_INTEL_ebx:
+            return handle_intel();
+        case signature_AMD_ebx:
+            return handle_amd();
+        default:
+            printf("Unknown x86 CPU detected\n");
+            break;
+    }
+    return 0;
 }
 
-/* Print Registers */
 void printregs(int eax, int ebx, int ecx, int edx) {
 	int j;
 	char string[17];
@@ -285,84 +92,204 @@ void printregs(int eax, int ebx, int ecx, int edx) {
 	printf("%s", string);
 }
 
-/* AMD-specific information */
-int do_amd(void) {
-	printf("AMD Specific Features:\n");
-	unsigned long extended, eax, ebx, ecx, edx, unused;
-	int family, model, stepping, reserved;
-	cpuid(1, eax, unused, unused, unused);
-	model = (eax >> 4) & 0xf;
-	family = (eax >> 8) & 0xf;
-	stepping = eax & 0xf;
-	reserved = eax >> 12;
-	printf("\tFamily: %d Model: %d [", family, model);
-	switch(family) {
-		case 4:
-		printf("486 Model %d", model);
-		break;
-		case 5:
-		switch(model) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 6:
-			case 7:
-			printf("K6 Model %d", model);
-			break;
-			case 8:
-			printf("K6-2 Model 8");
-			break;
-			case 9:
-			printf("K6-III Model 9");
-			break;
-			default:
-			printf("K5/K6 Model %d", model);
-			break;
-		}
-		break;
-		case 6:
-		switch(model) {
-			case 1:
-			case 2:
-			case 4:
-			printf("Athlon Model %d", model);
-			break;
-			case 3:
-			printf("Duron Model 3");
-			break;
-			case 6:
-			printf("Athlon MP/Mobile Athlon Model 6");
-			break;
-			case 7:
-			printf("Mobile Duron Model 7");
-			break;
-			default:
-			printf("Duron/Athlon Model %d", model);
-			break;
-		}
-		break;
-	}
-	printf("]\n");
-	cpuid(0x80000000, extended, unused, unused, unused);
-	if(extended == 0) {
-		return 0;
-	}
-	if(extended >= 0x80000002) {
-		unsigned int j;
-		printf("Detected Processor Name: ");
-		for(j = 0x80000002; j <= 0x80000004; j++) {
-			cpuid(j, eax, ebx, ecx, edx);
-			printregs(eax, ebx, ecx, edx);
-		}
-		printf("\n");
-	}
-	if(extended >= 0x80000007) {
-		cpuid(0x80000007, unused, unused, unused, edx);
-		if(edx & 1) {
-			printf("Temperature Sensing Diode Detected!\n");
-		}
-	}
-	printf("Stepping: %d Reserved: %d\n", stepping, reserved);
-	return 0;
+char *intel_get_type(int type) {
+    switch (type) {
+        case 0: return "Original OEM";
+        case 1: return "Overdrive";
+        case 2: return "Dual-capable";
+        case 3: return "Reserved";
+    }
+    return "Unknown";
+}
+
+char *intel_get_family(int family) {
+    switch (family) {
+        case 3: return "i386";
+        case 4: return "i486";
+        case 5: return "Pentium";
+        case 6: return "Pentium Pro";
+        case 15: return "Pentium IV";
+    }
+    return "Unknown";
+}
+
+char *intel_get_model(int family, int model) {
+    switch (family) {
+        case 3: return "???";
+        case 4:
+            switch (model) {
+                case 0:
+                case 1: return "DX";
+                case 2: return "SX";
+                case 3: return "487/DX2";
+                case 4: return "SL";
+                case 5: return "SX2";
+                case 7: return "Write-back enhanced DX2";
+                case 8: return "DX4";
+            }
+            break;
+        case 5:
+            switch (model) {
+                case 1: return "60/66";
+                case 2: return "75-200";
+                case 3: return "for 486 system";
+                case 4: return "MMX";
+            }
+            break;
+        case 6:
+            switch (model) {
+                case 1: return "Pentium Pro";
+                case 3: return "Pentium II Model 3";
+                case 5: return "Pentium II Model 5/Xeon/Celeron";
+                case 6: return "Celeron";
+                case 7: return "Pentium III/Pentium III Xeon - external L2 cache";
+                case 8: return "Pentium III/Pentium III Xeon - internal L2 cache";
+            }
+            break;
+        case 15:
+            return "???";
+    }
+    return "???";
+}
+
+int handle_intel(void) {
+    printf("Intel specific features:\n");
+    uint32_t eax, ebx, ecx, edx, max_eax, sig, unused;
+    int model, family, type, brand, stepping, reserved;
+    int extended_family = -1;
+    
+    cpuid(1, eax, ebx, unused, unused);
+    model = (eax >> 4) & 0xF;
+    family = (eax >> 8) & 0xF;
+    type = (eax >> 12) & 0x3;
+    brand = ebx & 0xFF;
+    stepping = eax & 0xF;
+    reserved = eax >> 14;
+    sig = eax;
+
+    printf("\t Type %d - %s\n", type, intel_get_type(type));
+    printf("Family %d - %s\n", family, intel_get_family(family));
+
+    if (family == 15) {
+        extended_family = (eax >> 20) & 0xFF;
+        printf("Extended family %d\n", extended_family);
+    }
+    printf("Model %d - %s\n", model, intel_get_model(family, model));
+
+	cpuid(0x80000000, max_eax, unused, unused, unused);
+
+    if (max_eax >= 0x80000004) {
+        printf("Brand: ");
+        if (max_eax >= 0x80000002) {
+            cpuid(0x80000002, eax, ebx, ecx, edx);
+            printregs(eax, ebx, ecx, edx);
+        }
+        if (max_eax >= 0x80000003) {
+            cpuid(0x80000003, eax, ebx, ecx, edx);
+            printregs(eax, ebx, ecx, edx);
+        }
+        if (max_eax >= 0x80000004) {
+            cpuid(0x80000004, eax, ebx, ecx, edx);
+            printregs(eax, ebx, ecx, edx);
+        }
+        printf("\n");
+    } else if (brand > 0) {
+        printf("Brand %d - ", brand);
+        if (brand < 0x18) {
+            if (sig == 0x000006B1 || sig == 0x00000F13) {
+                printf("%s\n", intel_other[brand]);
+            } else {
+                printf("%s\n", intel_models[brand]);
+            }
+        } else {
+            printf("Reserved\n");
+        }
+    }
+    printf("Stepping: %d Reserved: %d\n", stepping, reserved);
+    return 0;
+}
+
+int handle_amd(void) {
+    printf("AMD Specific Features:\n");
+    uint32_t extended, eax, ebx, ecx, edx, unused;
+    int family, model, stepping, reserved;
+
+    cpuid(1, eax, unused, unused, unused);
+    model = (eax >> 4) & 0xF;
+    family = (eax >> 8) & 0xF;
+    stepping = eax & 0xF;
+    reserved = eax >> 12;
+
+    printf("\t Family: %d Model %d [", family, model);
+    switch(family) {
+        case 4:
+            printf("486 Model %d", model);
+            break;
+        case 5:
+            switch(model) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 6:
+                case 7:
+                    printf("K6 Model %d", model);
+                    break;
+                case 8:
+                    printf("K6-2 Model 8");
+                    break;
+                case 9:
+                    printf("K6-III Model 9");
+                    break;
+                default:
+                    printf("K5/K6 Model %d", model);
+                    break;
+            }
+            break;
+        case 6:
+            switch(model) {
+                case 1:
+                case 2:
+                case 4:
+                    printf("Athlon Model %d", model);
+                    break;
+                case 3:
+                    printf("Duron Model 3");
+                    break;
+                case 6:
+                    printf("Athlon MP/Mobile Athlon Model 6");
+                    break;
+                case 7:
+                    printf("Mobile Duron Model 7");
+                    break;
+                default:
+                    printf("Duron/Athlon Model %d", model);
+                    break;
+            }
+            break;
+    }
+    printf("]\n");
+
+    cpuid(0x80000000, extended, unused, unused, unused);
+    if (extended == 0)
+        return 0;
+
+    if (extended >= 0x80000002) {
+        uint32_t i;
+        printf("Detected Processor Name: ");
+        for (i = 0x80000002; i < 0x80000004; i++) {
+            cpuid(i, eax, ebx, ecx, edx);
+            printregs(eax, ebx, ecx, edx);
+        }
+        printf("\n");
+    }
+
+    if (extended >= 0x80000007) {
+        cpuid(0x80000007, unused, unused, unused, edx);
+        if (edx & 1) {
+            printf("Temperature Sensing Diode Detected!\n");
+        }
+    }
+    printf("Stepping: %d Reserved: %d\n", stepping, reserved);
+    return 0;
 }

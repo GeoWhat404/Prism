@@ -2,6 +2,7 @@
 #include "isr.h"
 #include "port.h"
 #include "i8259.h"
+#include "instr.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -35,7 +36,7 @@ void irq_initialize(void) {
     }
 
     // They should be already enabled but just in case...
-    __asm__ volatile("sti");
+    sti();
 
     for (int i = 0; i < 16; i++)
         isr_register_handler(i + PIC_REMAP_OFFSET, irq_handle_interrupt);
