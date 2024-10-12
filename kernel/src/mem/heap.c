@@ -42,6 +42,8 @@ void heap_init(void *heap_addr, size_t size) {
     first_free_blk = root_blk;
 
     printf("Heap: Completed Initialization\n\n");
+
+    log_info("Heap initilized");
 }
 
 void heap_print(void) {

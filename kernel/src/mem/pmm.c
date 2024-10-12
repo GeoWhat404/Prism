@@ -45,8 +45,7 @@ static bool pmm_is_page_used(phys_mem_ctx_t *ctx, uintptr_t page_idx) {
 
 static uint64_t pmm_addr_to_page_idx(phys_mem_ctx_t *ctx, phys_addr_t addr) {
     if (addr % PAGE_BYTE_SIZE) {
-        log_error(MODULE_PMM,
-    		  "Cannot convert non-aligned address to page index (%llx)",
+        log_error("Cannot convert non-aligned address to page index (%llx)",
     		  addr);
         printf(
             "Error: cannot convert non-aligned address to page index (%llx)\n",
@@ -95,7 +94,7 @@ static uintptr_t pmm_find_pages(size_t needed, uintptr_t start, uintptr_t end) {
             return i;
     }
 
-    log_error(MODULE_PMM, "OOM: Cannot find %d contiguous free pages", needed);
+    log_error("OOM: Cannot find %d contiguous free pages", needed);
     printf("Error: OOM: Cannot find %d contiguous free pages\n", needed);
 
     return INVALID_PHYS;
@@ -113,14 +112,14 @@ bool pmm_free_mem(const phys_addr_t phys, const size_t bytes) {
     uintptr_t page_idx = pmm_addr_to_page_idx(&pmm_ctx, phys);
 
     if (page_idx == INVALID_PHYS) {
-        log_warn(MODULE_PMM, "Tried to free invalid phys (0x%llx)", phys);
+        log_warn("Tried to free invalid phys (0x%llx)", phys);
         return false;
     }
 
     size_t page_count = pmm_bytes_to_pages(bytes);
     for (uintptr_t i = page_idx; i < page_idx + page_count; i++) {
         if (!pmm_is_page_used(&pmm_ctx, i)) {
-            log_warn(MODULE_PMM, "Cannot free a free page (%llu)", i);
+            log_warn("Cannot free a free page (%llu)", i);
             return false;
         }
 
@@ -132,14 +131,14 @@ bool pmm_free_mem(const phys_addr_t phys, const size_t bytes) {
 bool pmm_reserve_mem(const phys_addr_t phys, const size_t bytes) {
     uintptr_t page_idx = pmm_addr_to_page_idx(&pmm_ctx, phys);
     if (page_idx == INVALID_PHYS) {
-        log_warn(MODULE_PMM, "Tried to alloc invalid phys (0x%llx)", phys);
+        log_warn("Tried to alloc invalid phys (0x%llx)", phys);
         return false;
     }
 
     size_t page_count = pmm_bytes_to_pages(bytes);
     for (uintptr_t i = page_idx; i < page_idx + page_count; i++) {
         if (pmm_is_page_used(&pmm_ctx, i)) {
-            log_warn(MODULE_PMM, "Cannot reserve a reserved page (%d)", i);
+            log_warn("Cannot reserve a reserved page (%d)", i);
             return false;
         }
         pmm_reserve_page(&pmm_ctx, i);
@@ -172,7 +171,7 @@ mem_bitmap_t pmm_initialize(void) {
     uint64_t begin = pit_get_seconds();
 
     printf("PMM: Initializing\n");
-    log_info(MODULE_PMM, "Initializing PMM");
+    log_info("Initializing PMM");
 
     size_t total_memory = pmm_total_memory();
     size_t bitmap_size = pmm_bitmap_required_size(total_memory);
@@ -206,7 +205,7 @@ mem_bitmap_t pmm_initialize(void) {
 
     memset(pmm_ctx.bitmap, 0xFF, pmm_ctx.bitmap_size);
 
-    log_info(MODULE_PMM, "Releasing usable memory regions");
+    log_info("Releasing usable memory regions");
     printf("PMM: Releasing usable memory regions\n");
 
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
@@ -234,7 +233,7 @@ mem_bitmap_t pmm_initialize(void) {
 
     uint64_t end = pit_get_seconds();
 
-    log_info(MODULE_PMM, "Initialization complete (%llus)", end - begin);
+    log_info("Initialization complete (%llus)", end - begin);
     printf("PMM: Completed Initialization in %llus\n\n", end - begin);
 
     return bitmap;

@@ -29,7 +29,7 @@ void mem_print_layout(void) {
     size_t total = 0;
 
     printf("MEM: Printing layout\n");
-    log_debug(MODULE_MMU, "Printing layout");
+    log_info("Printing layout");
 
     struct limine_memmap_entry *entry;
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
@@ -41,7 +41,7 @@ void mem_print_layout(void) {
                entry->base, entry->base + entry->length - 1,
                entry->length, mem_region_names[entry->type]);
 
-        log_debug(MODULE_MMU, " | 0x%016x -> 0x%016x size: %011llu %s",
+        log_info(" | 0x%016x -> 0x%016x size: %011llu %s",
                entry->base, entry->base + entry->length - 1,
                entry->length, mem_region_names[entry->type]);
 

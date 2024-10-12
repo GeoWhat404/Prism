@@ -127,7 +127,7 @@ static bool vmm_map_page(phys_addr_t phys, virt_addr_t virt, uint32_t flags) {
     page_table_t *pml4_table = vmm_ctx.pml4_table;
     if (!pml4_table) {
         printf("VMM: PML4 table is NULL\n");
-        log_error(MODULE_VMM, "PML4 table is NULL");
+        log_error("PML4 table is NULL");
         return false;
     }
 
@@ -167,7 +167,7 @@ static bool vmm_map_page(phys_addr_t phys, virt_addr_t virt, uint32_t flags) {
     union page_entry *pt_entry = &pt_table->entries[PTE_IDX(virt)];
     if (pt_entry->present) {
         printf("VMM: page 0x%016llx is already mapped\n", phys);
-        log_warn(MODULE_VMM, "Page 0x%llx is already mapped", phys);
+        log_warn("Page 0x%llx is already mapped", phys);
         return false;
     } else {
         vmm_set_page_entry(pt_entry, phys, flags);
@@ -266,7 +266,7 @@ void vmm_init(mem_bitmap_t bitmap) {
     uint64_t begin = pit_get_seconds();
 
     printf("VMM: Initializing\n");
-    log_info(MODULE_VMM, "Initializing VMM");
+    log_info("Initializing VMM");
 
     lm_size_id_t lmsi = vmm_get_lmsi();
 
@@ -345,6 +345,6 @@ void vmm_init(mem_bitmap_t bitmap) {
     printf(" | new CR3: 0x%016llx\n", read_cr3());
 
     uint64_t end = pit_get_seconds();
-    log_info(MODULE_VMM, "Initialization complete (%llus)", end - begin);
+    log_info("Initialization complete (%llus)", end - begin);
     printf("VMM: Completed Initialization in %llus\n\n", begin - end);
 }

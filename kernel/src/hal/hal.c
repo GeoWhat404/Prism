@@ -11,20 +11,20 @@
 
 void hal_initialize(void) {
     gdt_initialize();
-    log_info(MODULE_HAL, "GDT Initialized");
+    log_info("GDT Initialized");
 
     idt_initialize();
-    log_info(MODULE_HAL, "IDT Initialized");
+    log_info("IDT Initialized");
 
     isr_initialize();
-    log_info(MODULE_HAL, "ISR Initialized");
+    log_info("ISR Initialized");
 
     irq_initialize();
-    log_info(MODULE_HAL, "IRQ Initialized");
+    log_info("IRQ Initialized");
 
     pit_initialize();
-    log_info(MODULE_HAL, "PIT Initialized");
+    log_info("PIT Initialized");
 
     rtc_initialize();
-    log_info(MODULE_HAL, "RTC Initialized");
+    log_info("RTC Initialized");
 }

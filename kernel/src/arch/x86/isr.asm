@@ -100,6 +100,7 @@ syscall_entry:
 
     o64 sysret
 
+; Main interrupt handling code
 isr_common:
     PUSH_ALL
 
@@ -112,11 +113,6 @@ isr_common:
     mov ss, bx
     mov fs, bx
     mov gs, bx
-
-    mov rdi, rsp
-    extern handle_tssrsp
-    call handle_tssrsp
-    ;mov rsp, rax
 
 	mov rdi, rsp
     extern isr_handle_interrupt
@@ -214,3 +210,4 @@ isr_stub_table:
   dq isr%+i
 %assign i i+1
 %endrep
+

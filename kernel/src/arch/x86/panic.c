@@ -64,7 +64,7 @@ char *get_function_name(uint64_t addr) {
 }
 
 void print_panic_msg(void) {
-    log_fatal(MODULE_MAIN, "Kernel Panic");
+    log_error("Kernel Panic");
 
     fprintf(VFS_FD_STDERR, "\n--- < kernel panic > ---\n"
                            "no need to panic though :)\n"

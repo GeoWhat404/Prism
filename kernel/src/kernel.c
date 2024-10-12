@@ -29,14 +29,14 @@ void init_mmu(void) {
     mem_print_layout();
 
     printf("MMU Components Initialized\n");
-    log_info(MODULE_MAIN, "MMU Initialized");
+    log_info("MMU Initialized");
 }
 
 void init_systems(void) {
     fb_initialize(boot_info.lfb);
 
     printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
-    log_info(MODULE_MAIN, "Prism Kernel loaded");
+    log_info("Prism Kernel loaded");
 
     hal_initialize();
 

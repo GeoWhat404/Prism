@@ -1,8 +1,6 @@
 #include "fb.h"
-#include "pit.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include <util/debug.h>
 #include <util/defines.h>
@@ -47,6 +45,8 @@ void fb_initialize(struct limine_framebuffer *_lfb) {
 
 	background_color = COLOR(0, 0, 0);
 	foreground_color = COLOR(255, 255, 255);
+
+    log_info("Framebuffer initialized");
 }
 
 void fb_clrscr(void) {

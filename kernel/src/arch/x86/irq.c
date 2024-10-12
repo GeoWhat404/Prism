@@ -15,7 +15,7 @@ void irq_handle_interrupt(registers_t *regs) {
 
     if (handlers[irq] == NULL) {
         printf("Unhandled IRQ: %d\n", irq);
-        log_warn(MODULE_INTRPT, "Unhandled IRQ: %d", irq);
+        log_warn("Unhandled IRQ: %d", irq);
     } else {
         handlers[irq](regs);
     }
@@ -32,7 +32,9 @@ void irq_initialize(void) {
     i8259_mask_all();
 
     if (!i8259_probe()) {
-        log_error(MODULE_INTRPT, "No PIC found!");
+        log_error("No PIC found!");
+    } else {
+        log_info("Found an i8258 PIC!");
     }
 
     // They should be already enabled but just in case...

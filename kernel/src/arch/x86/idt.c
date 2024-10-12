@@ -38,7 +38,7 @@ void idt_load(void) {
 
 void idt_set_gate(int interrupt, uint64_t handler, uint8_t flags) {
     if (idt[interrupt].selector != 0)
-        log_warn(MODULE_INTRPT, "Overriding previous IDT entry for 0x%x", interrupt);
+        log_warn("Overriding previous IDT entry for 0x%x", interrupt);
     idt[interrupt].offset_1 = handler & 0xFFFF;
     idt[interrupt].selector = GDT_KERNEL_CODE;
     idt[interrupt].ist = 0;

@@ -27,7 +27,7 @@ void spinlock_count_read_acquire(spinlock_count_t *lock) {
 
 void spinlock_count_read_release(spinlock_count_t *lock) {
     if (lock->count < 0) {
-        log_error(MODULE_SPINLOCK, "Expected a positive count value");
+        log_error("Expected a positive count value");
         panic("spinlock: positive value expected");
     }
     lock->count--;
@@ -41,7 +41,7 @@ void spinlock_count_write_acquire(spinlock_count_t *lock) {
 
 void spinlock_count_write_release(spinlock_count_t *lock) {
     if (lock->count != -1) {
-        log_error(MODULE_SPINLOCK, "Expected -1 but got %lld", lock->count);
+        log_error("Expected -1 but got %lld", lock->count);
         panic("spinlock: expected count to be -1 (%lld)", lock->count);
     }
     lock->count = 0;

@@ -3,19 +3,17 @@
 #include <stdio.h>
 
 static const char *const log_severity_colors[] = {
-    [LVL_DEBUG]         = "\033[34m",
-    [LVL_INFO]          = "\033[32m",
-    [LVL_WARN]          = "\033[33m",
-    [LVL_ERROR]         = "\033[31m",
-    [LVL_FATAL]         = "\033[39;41m",
+    [LVL_DEBUG]         = B_MAG,
+    [LVL_INFO]          = B_CYN,
+    [LVL_WARN]          = B_YEL,
+    [LVL_ERROR]         = B_RED,
 };
 
 static const char *const log_severity_names[] = {
-    [LVL_DEBUG]         = "DEBUG",
-    [LVL_INFO]          = "INFO",
-    [LVL_WARN]          = "WARN",
-    [LVL_ERROR]         = "ERROR",
-    [LVL_FATAL]         = "FATAL",
+    [LVL_DEBUG]         = "KDEBUG",
+    [LVL_INFO]          = "KINFO",
+    [LVL_WARN]          = "KWARN",
+    [LVL_ERROR]         = "KERROR",
 };
 
 static const char *const color_reset = "\033[0m";
@@ -29,7 +27,10 @@ void debugf(const char *fmt, ...) {
     va_end(args);
 }
 
-void vlogf(const char *module, int level, const char *fmt, va_list ap) {
+void logf(const char *file, int line, int level, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
     if (level < MIN_LOG_LEVEL)
         return;
 
@@ -37,21 +38,14 @@ void vlogf(const char *module, int level, const char *fmt, va_list ap) {
     fputs(log_severity_colors[level], VFS_FD_DEBUG);
 
     // print the severity and module
-    fprintf(VFS_FD_DEBUG, "[%s][%s]: ", log_severity_names[level], module);
+    fprintf(VFS_FD_DEBUG, "[%s] " RES, log_severity_names[level], file, line);
+    fprintf(VFS_FD_DEBUG, B_WHT "%s line: %d: " WHT, file, line);
 
     // print the message
-    vfprintf(VFS_FD_DEBUG, fmt, ap);
+    vfprintf(VFS_FD_DEBUG, fmt, args);
 
     // reset the color
     fprintf(VFS_FD_DEBUG, "%s\n", color_reset);
-
-}
-
-void logf(const char *module, int level, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-
-    vlogf(module, level, fmt, args);
 
     va_end(args);
 }

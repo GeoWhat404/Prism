@@ -1,10 +1,13 @@
 #include "kernel.h"
 
+#include <stdio.h>
 #include <stdbool.h>
 
 #include <hal/panic.h>
 #include <boot/boot.h>
 #include <boot/limine.h>
+
+#include <arch/x86/fb.h>
 
 __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
@@ -46,6 +49,12 @@ static volatile struct limine_hhdm_request hhdm_request = {
     .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_smbios_request smbios_request = {
+    .id = LIMINE_SMBIOS_REQUEST,
+    .revision = 0,
+};
+
 __attribute__((used, section(".requests_start_marker")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -76,11 +85,13 @@ void _start(void) {
     struct limine_kernel_address_response *kernel_addr = kernel_addr_request.response;
     struct limine_kernel_file_response *lkrnl_filer = kernel_file_request.response;
     struct limine_hhdm_response *lhhdmr = hhdm_request.response;
+    struct limine_smbios_response *lsmbiosr = smbios_request.response;
 
     boot_info.lfb = lfb;
     boot_info.lmmr = lmmr;
     boot_info.lhhdmr = lhhdmr;
     boot_info.lkrnl = lkrnl_filer->kernel_file;
+    boot_info.lsmbiosr = lsmbiosr;
     boot_info.kernel_phys_base = kernel_addr->physical_base;
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
 
