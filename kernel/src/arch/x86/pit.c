@@ -3,7 +3,7 @@
 #include "port.h"
 #include "instr.h"
 
-#include <util/debug.h>
+#include <util/logger.h>
 
 static uint64_t ticks = 0;
 static bool running = true;
@@ -72,7 +72,7 @@ uint64_t pit_get_seconds(void) {
 
 void pit_register_callback(pfn_pit_callback callback) {
     if (callback_count + 1 > PIT_MAX_CALLBACKS) {
-        log_warn("Max PIT callbacks reached");
+        kwarn("Max PIT callbacks reached");
     }
     timer_callbacks[callback_count++] = callback;
 }

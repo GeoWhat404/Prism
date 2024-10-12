@@ -7,24 +7,24 @@
 #include "pit.h"
 #include "rtc.h"
 
-#include <util/debug.h>
+#include <util/logger.h>
 
 void hal_initialize(void) {
     gdt_initialize();
-    log_info("GDT Initialized");
+    kinfo("GDT Initialized");
 
     idt_initialize();
-    log_info("IDT Initialized");
+    kinfo("IDT Initialized");
 
     isr_initialize();
-    log_info("ISR Initialized");
+    kinfo("ISR Initialized");
 
     irq_initialize();
-    log_info("IRQ Initialized");
+    kinfo("IRQ Initialized");
 
     pit_initialize();
-    log_info("PIT Initialized");
+    kinfo("PIT Initialized");
 
     rtc_initialize();
-    log_info("RTC Initialized");
+    kinfo("RTC Initialized");
 }

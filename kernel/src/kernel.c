@@ -23,40 +23,37 @@
 #include <boot/boot.h>
 #include <boot/limine.h>
 
+#include <util/logger.h>
+
 void init_mmu(void) {
     mem_init();
 
     mem_print_layout();
 
-    printf("MMU Components Initialized\n");
-    log_info("MMU Initialized");
+    kinfo("MMU Components Initialized");
 }
 
 void init_systems(void) {
     fb_initialize(boot_info.lfb);
 
-    printf("Prism v%s on %s\n", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
-    log_info("Prism Kernel loaded");
+    kinfo("Prism v%s on %s", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
 
     hal_initialize();
-
-    printf("HAL Initialized\n");
-
-    printf("\n--- < cpu detection > ---\n");
     detect_cpu();
-    printf("--- < cpu detection > ---\n\n");
-
     init_mmu();
 
+    kinfo("HHDM offset: 0x%016llx", boot_info.lhhdmr->offset);
+
     datetime_t time = rtc_get_datetime();
-    printf("Current date and time (RTC): %u:%u:%u %u/%u/%u\n",
+    kinfo("Current date and time (RTC): %u:%u:%u %u/%u/%u",
            time.hours, time.minutes, time.seconds,
            time.days, time.months, time.years);
 }
 
 void kmain(void) {
     init_systems();
-    printf("Initial setup complete in %llus\n", pit_get_seconds());
+    kinfo("Initial setup complete in %llus", pit_get_seconds());
+    panic("He!");
 
     while (1) {
         hlt();

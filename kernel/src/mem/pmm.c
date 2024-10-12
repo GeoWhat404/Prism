@@ -8,7 +8,7 @@
 #include <hal/pit.h>
 #include <hal/panic.h>
 
-#include <util/debug.h>
+#include <util/logger.h>
 
 #define PAGES_PER_BYTE      8ull
 #define PAGES_PER_BITMAP    64ull
@@ -45,11 +45,8 @@ static bool pmm_is_page_used(phys_mem_ctx_t *ctx, uintptr_t page_idx) {
 
 static uint64_t pmm_addr_to_page_idx(phys_mem_ctx_t *ctx, phys_addr_t addr) {
     if (addr % PAGE_BYTE_SIZE) {
-        log_error("Cannot convert non-aligned address to page index (%llx)",
+        kerror("Cannot convert non-aligned address to page index (%llx)",
     		  addr);
-        printf(
-            "Error: cannot convert non-aligned address to page index (%llx)\n",
-            addr);
         return INVALID_PHYS;
     }
 
@@ -94,8 +91,7 @@ static uintptr_t pmm_find_pages(size_t needed, uintptr_t start, uintptr_t end) {
             return i;
     }
 
-    log_error("OOM: Cannot find %d contiguous free pages", needed);
-    printf("Error: OOM: Cannot find %d contiguous free pages\n", needed);
+    kerror("OOM: Cannot find %d contiguous free pages", needed);
 
     return INVALID_PHYS;
 }
@@ -112,14 +108,14 @@ bool pmm_free_mem(const phys_addr_t phys, const size_t bytes) {
     uintptr_t page_idx = pmm_addr_to_page_idx(&pmm_ctx, phys);
 
     if (page_idx == INVALID_PHYS) {
-        log_warn("Tried to free invalid phys (0x%llx)", phys);
+        kwarn("Tried to free invalid phys (0x%llx)", phys);
         return false;
     }
 
     size_t page_count = pmm_bytes_to_pages(bytes);
     for (uintptr_t i = page_idx; i < page_idx + page_count; i++) {
         if (!pmm_is_page_used(&pmm_ctx, i)) {
-            log_warn("Cannot free a free page (%llu)", i);
+            kwarn("Cannot free a free page (%llu)", i);
             return false;
         }
 
@@ -131,14 +127,14 @@ bool pmm_free_mem(const phys_addr_t phys, const size_t bytes) {
 bool pmm_reserve_mem(const phys_addr_t phys, const size_t bytes) {
     uintptr_t page_idx = pmm_addr_to_page_idx(&pmm_ctx, phys);
     if (page_idx == INVALID_PHYS) {
-        log_warn("Tried to alloc invalid phys (0x%llx)", phys);
+        kwarn("Tried to alloc invalid phys (0x%llx)", phys);
         return false;
     }
 
     size_t page_count = pmm_bytes_to_pages(bytes);
     for (uintptr_t i = page_idx; i < page_idx + page_count; i++) {
         if (pmm_is_page_used(&pmm_ctx, i)) {
-            log_warn("Cannot reserve a reserved page (%d)", i);
+            kwarn("Cannot reserve a reserved page (%d)", i);
             return false;
         }
         pmm_reserve_page(&pmm_ctx, i);
@@ -170,14 +166,13 @@ mem_bitmap_t pmm_initialize(void) {
 
     uint64_t begin = pit_get_seconds();
 
-    printf("PMM: Initializing\n");
-    log_info("Initializing PMM");
+    kinfo("Initializing PMM");
 
     size_t total_memory = pmm_total_memory();
     size_t bitmap_size = pmm_bitmap_required_size(total_memory);
 
-    printf(" | total memory: %d bytes\n", total_memory);
-    printf(" | total pages: %d\n", total_memory / PAGE_BYTE_SIZE);
+    kinfo(" | total memory: %d bytes", total_memory);
+    kinfo(" | total pages: %d", total_memory / PAGE_BYTE_SIZE);
 
     struct limine_memmap_entry *mm_entry = 0;
 
@@ -199,14 +194,13 @@ mem_bitmap_t pmm_initialize(void) {
     pmm_ctx.bitmap_size = bitmap_size;
     pmm_ctx.bitmap = (uint64_t *)(mm_entry->base + boot_info.lhhdmr->offset);
 
-    printf("PMM: Setting up mem bitmap\n");
-    printf(" | bitmap addr: 0x%016llx\n", pmm_ctx.bitmap);
-    printf(" | bitmap size: %d bytes\n", pmm_ctx.bitmap_size);
+    kinfo("PMM: Setting up mem bitmap");
+    kinfo(" | bitmap addr: 0x%016llx", pmm_ctx.bitmap);
+    kinfo(" | bitmap size: %d bytes", pmm_ctx.bitmap_size);
 
     memset(pmm_ctx.bitmap, 0xFF, pmm_ctx.bitmap_size);
 
-    log_info("Releasing usable memory regions");
-    printf("PMM: Releasing usable memory regions\n");
+    kinfo("Releasing usable memory regions");
 
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
         struct limine_memmap_entry *entry = boot_info.lmmr->entries[i];
@@ -224,7 +218,7 @@ mem_bitmap_t pmm_initialize(void) {
         panic("failed to reserve mem region: 0x%016llx->0x%016llx",
                mm_entry->base, mm_entry->base + mm_entry->length - 1);
 
-    printf(" | usable free mem: %d bytes\n",
+    kinfo(" | usable free mem: %d bytes",
            (pmm_ctx.total_pages - pmm_ctx.used_pages) * PAGE_BYTE_SIZE);
 
     mem_bitmap_t bitmap = {0};
@@ -233,8 +227,7 @@ mem_bitmap_t pmm_initialize(void) {
 
     uint64_t end = pit_get_seconds();
 
-    log_info("Initialization complete (%llus)", end - begin);
-    printf("PMM: Completed Initialization in %llus\n\n", end - begin);
+    kinfo("Initialization complete (%llus)", end - begin);
 
     return bitmap;
 }

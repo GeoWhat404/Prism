@@ -8,7 +8,7 @@
 #include <boot/boot.h>
 
 #include <util/elf.h>
-#include <util/debug.h>
+#include <util/logger.h>
 
 extern __attribute__((noreturn)) void asm_dump_regs(void);
 
@@ -64,11 +64,10 @@ char *get_function_name(uint64_t addr) {
 }
 
 void print_panic_msg(void) {
-    log_error("Kernel Panic");
-
-    fprintf(VFS_FD_STDERR, "\n--- < kernel panic > ---\n"
-                           "no need to panic though :)\n"
-                           "reason: ");
+    fprintf(VFS_FD_STDERR, "--- < kernel panic > ---");
+    fprintf(VFS_FD_STDERR,
+            "no need to panic though :)\n"
+            "reason: ");
 }
 
 void print_panic_reason(const char *fmt, va_list ap) {
@@ -77,7 +76,6 @@ void print_panic_reason(const char *fmt, va_list ap) {
 }
 
 void panic(const char *fmt, ...) {
-
     va_list ap;
     va_start(ap, fmt);
 
@@ -88,56 +86,40 @@ void panic(const char *fmt, ...) {
 }
 
 void stack_trace(int depth, uint64_t rbp, uint64_t rip) {
-    printf("-- < stack trace > --\n");
+    kerror("-- < stack trace > --");
 
-    printf("0x%016llx ", rip);
-    if (rip)
-        printf("\t%s", get_function_name(rip));
-    printf("\n");
+    kerror("0x%016llx \t%s", rip, (rip ? get_function_name(rip) : "N/A"));
 
     stack_frame_t *stack = (stack_frame_t *)rbp;
 
     do {
-        printf("0x%016llx ", stack->rip);
-        if (stack->rip)
-            printf("\t%s", get_function_name(stack->rip));
-        printf("\n");
+        kerror("0x%016llx \t%s", stack->rip, (stack->rip ? get_function_name(stack->rip) : "N/A"));
         stack = stack->rbp;
     } while (stack && --depth && stack->rip);
     printf(" | This is a very sad moment :(\n");
 }
 
 void dump_regs(registers_t *regs) {
-    printf("-- < register dump > --\n");
+    kerror("-- < register dump > --");
 
     uint64_t cr2;
     __asm__ volatile("mov %%cr2, %0" : "=r"(cr2));
 
-    printf("RIP=0x%016llx\n",
+    kerror("RIP=0x%016llx",
            regs->rip);
 
-    printf("CS =0x%016llx\t\tDS =0x%016llx\n",
+    kerror("CS =0x%016llx\t\tDS =0x%016llx",
            regs->cs, regs->ds);
 
-    printf("\n");
-    printf("RAX=0x%016llx\t\tR8 =0x%016llx\n"
-           "RBX=0x%016llx\t\tR9 =0x%016llx\n"
-           "RCX=0x%016llx\t\tR10=0x%016llx\n"
-           "RDX=0x%016llx\t\tR11=0x%016llx\n"
-           "RSI=0x%016llx\t\tR12=0x%016llx\n"
-           "RDI=0x%016llx\t\tR13=0x%016llx\n"
-           "RBP=0x%016llx\t\tR14=0x%016llx\n"
-           "RSP=0x%016llx\t\tR15=0x%016llx\n",
-           regs->rax, regs->r8,
-           regs->rbx, regs->r9,
-           regs->rcx, regs->r10,
-           regs->rdx, regs->r11,
-           regs->rsi, regs->r12,
-           regs->rdi, regs->r13,
-           regs->rbp, regs->r14,
-           regs->usermode_rsp, regs->r15);
-
-    printf("CR2=0x%016llx\n", cr2);
+    kerror("RAX=0x%016llx\t\tR8 =0x%016llx", regs->rax, regs->r8);
+    kerror("RBX=0x%016llx\t\tR9 =0x%016llx", regs->rbx, regs->r9);
+    kerror("RCX=0x%016llx\t\tR10=0x%016llx", regs->rcx, regs->r10);
+    kerror("RDX=0x%016llx\t\tR11=0x%016llx", regs->rdx, regs->r11);
+    kerror("RSI=0x%016llx\t\tR12=0x%016llx", regs->rsi, regs->r12);
+    kerror("RDI=0x%016llx\t\tR13=0x%016llx", regs->rdi, regs->r13);
+    kerror("RBP=0x%016llx\t\tR14=0x%016llx", regs->rbp, regs->r14);
+    kerror("RSP=0x%016llx\t\tR15=0x%016llx", regs->usermode_rsp, regs->r15);
+    kerror("CR2=0x%016llx", cr2);
 
     stack_trace(10, regs->rbp, regs->rip);
 

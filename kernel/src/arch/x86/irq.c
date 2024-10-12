@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include <stddef.h>
-#include <util/debug.h>
+#include <util/logger.h>
 
 pfn_irq_handler handlers[16];
 
@@ -14,8 +14,7 @@ void irq_handle_interrupt(registers_t *regs) {
     uint32_t irq = regs->interrupt - PIC_REMAP_OFFSET;
 
     if (handlers[irq] == NULL) {
-        printf("Unhandled IRQ: %d\n", irq);
-        log_warn("Unhandled IRQ: %d", irq);
+        kwarn("Unhandled IRQ: %d", irq);
     } else {
         handlers[irq](regs);
     }
@@ -32,9 +31,9 @@ void irq_initialize(void) {
     i8259_mask_all();
 
     if (!i8259_probe()) {
-        log_error("No PIC found!");
+        kwarn("No PIC found!");
     } else {
-        log_info("Found an i8258 PIC!");
+        kinfo("Found an i8258 PIC!");
     }
 
     // They should be already enabled but just in case...

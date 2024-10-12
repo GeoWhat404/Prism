@@ -3,10 +3,9 @@
 #include "pmm.h"
 #include "vmm.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <hal/panic.h>
-#include <util/debug.h>
+#include <util/logger.h>
 
 typedef struct heap_blk {
     size_t length;
@@ -21,9 +20,9 @@ static heap_blk_t *root_blk = 0;
 static heap_blk_t *first_free_blk = 0;
 
 void heap_init(void *heap_addr, size_t size) {
-    printf("Heap: Initializing\n");
-    printf(" | addr: 0x%016llx\n", heap_addr);
-    printf(" | size: %u bytes\n", size);
+    kinfo("Heap: Initializing");
+    kinfo(" | addr: 0x%016llx", heap_addr);
+    kinfo(" | size: %u bytes", size);
 
     phys_addr_t phys = pmm_alloc_mem(size);
     if (phys == INVALID_PHYS)
@@ -41,18 +40,16 @@ void heap_init(void *heap_addr, size_t size) {
 
     first_free_blk = root_blk;
 
-    printf("Heap: Completed Initialization\n\n");
-
-    log_info("Heap initilized");
+    kinfo("Heap: Completed Initialization");
 }
 
 void heap_print(void) {
     heap_blk_t *ptr = root_blk;
-    printf("Heap: Dumping the heap\n");
+    kinfo("Heap: Dumping the heap");
     do {
-        printf(" | blk addr: 0x%016llx size: %lu bytes (%s)\n",
+        kinfo(" | blk addr: 0x%016llx size: %lu bytes (%s)",
                ptr, ptr->length, ptr->free ? "Free" : "Allocated");
-        printf("   prev: 0x%016llx next: 0x%016llx next free: 0x%016llx\n",
+        kinfo("   prev: 0x%016llx next: 0x%016llx next free: 0x%016llx",
                ptr->prev, ptr->next, ptr->next_free);
         ptr = ptr->next;
     } while (ptr);

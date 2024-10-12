@@ -10,7 +10,7 @@
 
 #include <boot/limine.h>
 
-#include <util/debug.h>
+#include <util/logger.h>
 #include <util/defines.h>
 
 #include <hal/pit.h>
@@ -126,8 +126,7 @@ static void vmm_set_page_entry(union page_entry *entry,
 static bool vmm_map_page(phys_addr_t phys, virt_addr_t virt, uint32_t flags) {
     page_table_t *pml4_table = vmm_ctx.pml4_table;
     if (!pml4_table) {
-        printf("VMM: PML4 table is NULL\n");
-        log_error("PML4 table is NULL");
+        kerror("PML4 table is NULL");
         return false;
     }
 
@@ -166,8 +165,7 @@ static bool vmm_map_page(phys_addr_t phys, virt_addr_t virt, uint32_t flags) {
 
     union page_entry *pt_entry = &pt_table->entries[PTE_IDX(virt)];
     if (pt_entry->present) {
-        printf("VMM: page 0x%016llx is already mapped\n", phys);
-        log_warn("Page 0x%llx is already mapped", phys);
+        kwarn("Page 0x%016llx is already mapped", phys);
         return false;
     } else {
         vmm_set_page_entry(pt_entry, phys, flags);
@@ -192,7 +190,7 @@ void vmm_print_memmap(void) {
         & 0xfffffffffffff000;
 
     page_table_t *pml4_table = vmm_ctx.pml4_table;
-    printf("PML4 table: 0x%016llx\n", mem_virt_to_phys(pml4_table));
+    kinfo("PML4 table: 0x%016llx", mem_virt_to_phys(pml4_table));
 
     for (uint64_t i = 0; i < 512; i++) {
         union page_entry *pml4_entry = &pml4_table->entries[i];
@@ -201,7 +199,7 @@ void vmm_print_memmap(void) {
             continue;
 
         page_table_t *pdp_table = vmm_get_table_from_entry(pml4_entry);
-        printf("PML4E index: %3d | PML4E: 0x%016llx | PDP table: 0x%016llx\n",
+        kinfo("PML4E index: %3d | PML4E: 0x%016llx | PDP table: 0x%016llx",
                i, *pml4_entry, mem_virt_to_phys(pdp_table));
 
         for (uint64_t j = 0; j < 512; j++) {
@@ -210,7 +208,7 @@ void vmm_print_memmap(void) {
                 continue;
 
             page_table_t *pd_table = vmm_get_table_from_entry(pdp_entry);
-            printf(" | PDPE index: %3d PDPE: 0x%016llx PD table: 0x%016llx\n",
+            kinfo(" | PDPE index: %3d PDPE: 0x%016llx PD table: 0x%016llx",
 	                j, *pdp_entry, mem_virt_to_phys(pd_table));
 
             for (uint64_t k = 0; k < 512; k++) {
@@ -220,8 +218,8 @@ void vmm_print_memmap(void) {
                     continue;
 
                 page_table_t *pt_table = vmm_get_table_from_entry(pd_entry);
-                printf("    | PDE index: %3d PDE: "
-                       "0x%016llx PT table: 0x%016llx\n",
+                kinfo("    | PDE index: %3d PDE: "
+                       "0x%016llx PT table: 0x%016llx",
                        k, *pd_entry, mem_virt_to_phys(pt_table));
 
                 for (uint64_t l = 0; l < 512; l++) {
@@ -236,7 +234,7 @@ void vmm_print_memmap(void) {
                                       (l << 12) |
                                       (0xffffffffffffffff <<
                                             vmm_ctx.virt_addr_size));
-                    printf("      | PTE index: %3d PTE: 0x%016llx "
+                    kinfo("      | PTE index: %3d PTE: 0x%016llx "
                            "Phys: 0x%016llx Virt:0x%016llx\n",
                            l, *p_entry, p_entry->raw & entry_addr_mask, virt);
                 }
@@ -265,17 +263,16 @@ static lm_size_id_t vmm_get_lmsi(void) {
 void vmm_init(mem_bitmap_t bitmap) {
     uint64_t begin = pit_get_seconds();
 
-    printf("VMM: Initializing\n");
-    log_info("Initializing VMM");
+    kinfo("Initializing VMM");
 
     lm_size_id_t lmsi = vmm_get_lmsi();
 
     vmm_ctx.phys_addr_size = lmsi.phys_addr_size;
     vmm_ctx.virt_addr_size = lmsi.virt_addr_size;
 
-    printf(" | supported physical address bits: %d\n", vmm_ctx.phys_addr_size);
-    printf(" | supported virtual address bits: %d\n", vmm_ctx.virt_addr_size);
-    printf(" | HHDM offset: 0x%016llx\n", boot_info.lhhdmr->offset);
+    kinfo(" | supported physical address bits: %d", vmm_ctx.phys_addr_size);
+    kinfo(" | supported virtual address bits: %d", vmm_ctx.virt_addr_size);
+    kinfo(" | HHDM offset: 0x%016llx", boot_info.lhhdmr->offset);
 
     phys_addr_t pml4_table_phys = pmm_alloc_mem(1);
     if (pml4_table_phys == INVALID_PHYS)
@@ -286,7 +283,7 @@ void vmm_init(mem_bitmap_t bitmap) {
 
     vmm_ctx.pml4_table = pml4_table_virt;
 
-    printf("VMM: Populating page table pool\n");
+    kinfo("VMM: Populating page table pool");
 
     for (uint64_t i = 0; i < PT_POOL_SIZE; i++) {
         phys_addr_t phys = pmm_alloc_mem(1);
@@ -297,11 +294,11 @@ void vmm_init(mem_bitmap_t bitmap) {
         vmm_ctx.pt_pool[i] = virt;
     }
 
-    printf(" | %d pages added to the page pool\n", PT_POOL_SIZE);
-    printf("VMM: Setting up new PML4 table\n");
-    printf(" | Phys: 0x%016llx Virt: 0x%016llx\n",
-           pml4_table_phys, pml4_table_virt);
-    printf("VMM: Populating PML4 table\n");
+    kinfo(" | %d pages added to the page pool", PT_POOL_SIZE);
+    kinfo("VMM: Setting up new PML4 table");
+    kinfo(" | Phys: 0x%016llx Virt: 0x%016llx",
+          pml4_table_phys, pml4_table_virt);
+    kinfo("VMM: Populating PML4 table");
 
     vmm_map(mem_virt_to_phys(vmm_ctx.pt_pool[0]), vmm_ctx.pt_pool[0],
             PT_POOL_SIZE * PAGE_BYTE_SIZE, PAGE_MAP_WRITABLE);
@@ -334,17 +331,16 @@ void vmm_init(mem_bitmap_t bitmap) {
         }
     }
 
-    printf(" | %d pages mapped into PML4 table\n", pages_mapped);
-    printf("VMM: Transfering to new PML4 table\n");
+    kinfo(" | %d pages mapped into PML4 table", pages_mapped);
+    kinfo("VMM: Transfering to new PML4 table");
 
     uint64_t current_cr3 = read_cr3();
     uint64_t new_cr3_addr = (current_cr3 & 0xFFFull) |
                             (pml4_table_phys & ~0xFFFull);
-    printf(" | old CR3: 0x%016llx\n", current_cr3);
+    kinfo(" | old CR3: 0x%016llx", current_cr3);
     write_cr3(new_cr3_addr);
-    printf(" | new CR3: 0x%016llx\n", read_cr3());
+    kinfo(" | new CR3: 0x%016llx", read_cr3());
 
     uint64_t end = pit_get_seconds();
-    log_info("Initialization complete (%llus)", end - begin);
-    printf("VMM: Completed Initialization in %llus\n\n", begin - end);
+    kinfo("Initialization complete (%llus)", end - begin);
 }

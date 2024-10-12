@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <util/debug.h>
 #include <util/binary.h>
-#include <util/defines.h>
+#include <util/logger.h>
 
 typedef struct {
     uint16_t offset_1;          // Offset bits 0->15
@@ -37,8 +37,6 @@ void idt_load(void) {
 }
 
 void idt_set_gate(int interrupt, uint64_t handler, uint8_t flags) {
-    if (idt[interrupt].selector != 0)
-        log_warn("Overriding previous IDT entry for 0x%x", interrupt);
     idt[interrupt].offset_1 = handler & 0xFFFF;
     idt[interrupt].selector = GDT_KERNEL_CODE;
     idt[interrupt].ist = 0;

@@ -2,7 +2,7 @@
 #include "isr.h"
 #include "panic.h"
 
-#include <util/debug.h>
+#include <util/logger.h>
 
 extern void *isr128;
 extern void *isr_stub_table[];
@@ -77,7 +77,7 @@ void isr_handle_interrupt(uint64_t rsp) {
     }
 
     if (isr_handlers[cpu->interrupt] == 0) {
-        log_error("Unhandled interrupt: %s (0x%x)",
+        kerror("Unhandled interrupt: %s (0x%x)",
                   exceptions[cpu->interrupt], cpu->interrupt);
         panic("%s (0x%llx)",
               exceptions[cpu->interrupt], cpu->interrupt);
@@ -87,12 +87,12 @@ void isr_handle_interrupt(uint64_t rsp) {
 
 void isr_register_handler(int interrupt, pfn_isr_handler handler) {
     if (handler == 0) {
-        log_warn("Tried to register a null isr handler");
+        kwarn("Tried to register a null isr handler");
         return;
     }
 
     if (interrupt > ISR_HANDLER_COUNT) {
-        log_warn("Interrupt exceeds bounds of isr handler array");
+        kwarn("Interrupt exceeds bounds of isr handler array");
         return;
     }
 

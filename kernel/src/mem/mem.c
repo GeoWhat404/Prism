@@ -6,8 +6,8 @@
 #include <stdio.h>
 
 #include <boot/boot.h>
-#include <util/debug.h>
 #include <boot/limine.h>
+#include <util/logger.h>
 
 #define HEAP_INITIALIZE_SIZE (0x1000 * 20)
 
@@ -28,8 +28,7 @@ static const char *mem_region_names[] = {
 void mem_print_layout(void) {
     size_t total = 0;
 
-    printf("MEM: Printing layout\n");
-    log_info("Printing layout");
+    kinfo("MEM: Printing layout");
 
     struct limine_memmap_entry *entry;
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
@@ -37,16 +36,12 @@ void mem_print_layout(void) {
 
         total += entry->length;
 
-        printf(" | 0x%016x -> 0x%016x size: %011llu %s\n",
-               entry->base, entry->base + entry->length - 1,
-               entry->length, mem_region_names[entry->type]);
-
-        log_info(" | 0x%016x -> 0x%016x size: %011llu %s",
+        kinfo(" | 0x%016x -> 0x%016x size: %011llu %s",
                entry->base, entry->base + entry->length - 1,
                entry->length, mem_region_names[entry->type]);
 
     }
-    printf("MEM: Total memory: %llu\n\n", total);
+    kinfo("MEM: Total memory: %llu", total);
 }
 
 void mem_init(void) {
