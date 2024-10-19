@@ -41,6 +41,7 @@ void fb_putc(char c) {
 	case '\n':
 		fb.cursor_x = 0;
 		fb.cursor_y++;
+        graphics_swap_buffer(fb.graphics_ctx);
 		break;
 	case '\r':
 		fb.cursor_y++;

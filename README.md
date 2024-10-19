@@ -1,6 +1,7 @@
 # Prism Operating System
 
-Welcome to Prism, a 64-bit operating system designed for performance and efficiency. Prism is built with modern computing in mind and uses the Limine bootloader for a smooth booting experience.
+Uh this is my little OS project. It should run on real hardware (it works on my machine)
+Currently using Limine as the bootloader but after i get some stuff done i might do my own
 
 ## License
 
@@ -13,13 +14,16 @@ Prism is licensed under the [MIT License](LICENSE). See the `LICENSE` file for m
 - Drivers
   - [ ] PS/2 Keyboard
   - [ ] AHCI 
+  - [X] Framebuffer (it sucks)
 - Memory
   - [X] Enable paging
   - [X] Physical memory manager
-  - [X] Virtual meomry manager
+  - [X] Virtual memory manager
   - [X] Malloc & Free
+- Multitasking
+  - [ ] Scheduler
 - Filesystems
-  - [ ] Fat32 fs  
+  - [ ] Fat32 fs
 - Processes
   - this is too far in the future LOL
 
