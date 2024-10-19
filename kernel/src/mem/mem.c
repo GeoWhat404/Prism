@@ -10,6 +10,7 @@
 #define HEAP_INITIAL_SIZE (0x1000 * 32)
 
 // in linker.ld
+extern uintptr_t kernel_start;
 extern uintptr_t kernel_end;
 
 static const char *mem_region_names[] = {

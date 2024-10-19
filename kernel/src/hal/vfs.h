@@ -11,3 +11,4 @@
 typedef uint32_t fd_t;
 
 size_t vfs_write(fd_t fd, uint8_t *data, size_t size);
+size_t vfs_write_s(fd_t, const char *str, size_t size);

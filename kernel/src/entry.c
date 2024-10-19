@@ -19,6 +19,12 @@ static volatile struct limine_framebuffer_request framebuffer_request = {
 };
 
 __attribute__((used, section(".requests")))
+static volatile struct limine_paging_mode_request paging_mode_request = {
+    .id = LIMINE_PAGING_MODE_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".requests")))
 static volatile struct limine_memmap_request memmap_request = {
     .id = LIMINE_MEMMAP_REQUEST,
     .revision = 0
@@ -60,10 +66,10 @@ void _start(void) {
         hcf();
     }
 
-    // struct limine_paging_mode_response *lpagingr = paging_request.response;
-    // if (lpagingr->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
-    //     panic("lvl4 paging not supported");
-    // }
+    struct limine_paging_mode_response *lpagingr = paging_mode_request.response;
+    if (lpagingr->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
+        panic("lvl4 paging not supported");
+    }
 
     if (framebuffer_request.response == 0
      || framebuffer_request.response->framebuffer_count < 1) {

@@ -1,4 +1,5 @@
 #include <cpuid.h>
+#include <stdint.h>
 #include <util/logger.h>
 
 #define cpuid(in, a, b, c, d)   \

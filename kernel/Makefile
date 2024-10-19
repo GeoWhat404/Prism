@@ -42,24 +42,28 @@ override DEFAULT_KLDFLAGS :=
 $(eval $(call DEFAULT_VAR,KLDFLAGS,$(DEFAULT_KLDFLAGS)))
 
 # Internal C flags that should not be changed by the user.
+
 override KCFLAGS += \
-	-g \
-    -m64 \
-	-ffreestanding \
-	-Wall \
-	-fcommon \
-	-Isrc/ \
-	-Isrc/klibc/ \
-	-fPIE \
-	-fPIC \
-	-mno-80387 \
-    -mno-mmx \
-    -mno-sse \
+	-fno-stack-protector \
+	-fno-stack-check \
 	-nostartfiles \
 	-nostdlib \
-    -mno-red-zone -fno-stack-protector \
-    -fno-stack-check \
-    -fno-lto \
+	-Isrc/ \
+	-Isrc/klibc/ \
+	-fcommon \
+	-ffreestanding \
+	-ffunction-sections \
+	-fno-PIC \
+	-fno-lto \
+	-fdata-sections \
+	-g \
+	-pipe \
+	-m64 \
+	-march=x86-64 \
+	-mno-80387 \
+	-mno-mmx \
+	-mno-red-zone \
+	-mcmodel=kernel \
 	-DDEBUG_MODE
 
 # Internal C preprocessor flags that should not be changed by the user.
@@ -74,9 +78,9 @@ override KLDFLAGS += \
     -m elf_x86_64 \
     -nostdlib \
     -static \
-	-pie \
-	--no-dynamic-linker \
+	-g \
     -z max-page-size=0x1000 \
+	-gc-sections \
     -T linker.ld
 
 # Internal nasm flags that should not be changed by the user.

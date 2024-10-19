@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <stdbool.h>
 #include <hal/vfs.h>
 
@@ -29,10 +30,7 @@ void fputc(uint8_t c, fd_t fd) {
 }
 
 void fputs(const char *str, fd_t fd) {
-    while (*str) {
-        fputc(*str, fd);
-        str++;
-    }
+    vfs_write_s(fd, str, strlen(str));
 }
 
 const char hex_chars[] = "0123456789ABCDEF";

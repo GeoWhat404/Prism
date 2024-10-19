@@ -1,12 +1,11 @@
-#ifndef __LIB_GRAPHICS_H
-#define __LIB_GRAPHICS_H 1
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 
-enum GRAPHICS_BUFFER_COUNT { SINGLE, DOUBLE, TRIPLE };
+enum graphics_buffer_count { SINGLE, DOUBLE, TRIPLE };
 
-struct GRAPHICS_FRAMEBUFFER {
+struct graphics_framebuffer {
 	void *address;
 	uint64_t width;
 	uint64_t height;
@@ -24,50 +23,92 @@ struct GRAPHICS_FRAMEBUFFER {
 	int valid;
 };
 
-typedef struct __graphics_context GRAPHICS_CONTEXT;
+enum __graphics_drawing_mode { NONE, RECT, ELLIPSE, TEXT, LINE };
+
+enum __graphics_active_buffer { FRAMEBUFFER, BUFFER0, BUFFER1 };
+
+typedef struct __graphics_context {
+    int x_offset;
+    int y_offset;
+    int ctx_width;
+    int ctx_height;
+    uint32_t pitch;
+
+    enum graphics_buffer_count buffer_count;
+
+    size_t buffer_size;
+    void *buffer;
+    void *buffer0;
+    void *buffer1;
+
+    enum __graphics_active_buffer current_back_buffer;
+
+    // draw origin
+    int origin_x;
+    int origin_y;
+
+    // Draw details
+    int x;
+    int y;
+    int w;
+    int h;
+
+    // Line end
+    int line_x;
+    int line_y;
+    int line_width;
+
+    // Line color in different sizes for when needed
+    uint64_t stroke_64;
+    uint32_t stroke_32;
+
+    // Fill color in different sizes for when needed
+    uint64_t fill_64;
+    uint32_t fill_32;
+
+    enum __graphics_drawing_mode mode;
+} graphics_ctx_t;
 
 struct font {
 	uint8_t width;
 	uint8_t height;
-	void (*putc)(GRAPHICS_CONTEXT *, int, int, char, uint32_t);
+	void (*putc)(graphics_ctx_t *, int, int, char, uint32_t);
 };
 
 int graphics_init(struct font *font);
 
-GRAPHICS_CONTEXT *graphics_get_ctx(enum GRAPHICS_BUFFER_COUNT buffer_count,
+graphics_ctx_t *graphics_get_ctx(enum graphics_buffer_count buffer_count,
 								   int x, int y, int width, int height);
-int graphics_destroy_ctx(GRAPHICS_CONTEXT *ctx);
+int graphics_destroy_ctx(graphics_ctx_t *ctx);
 
-void swap_buffer(GRAPHICS_CONTEXT *ctx);
-void pixel(GRAPHICS_CONTEXT *ctx, int x, int y, uint32_t color);
-void draw_char(GRAPHICS_CONTEXT *ctx, int x, int y, char c);
-void scroll(GRAPHICS_CONTEXT *ctx, uint32_t pixels);
+void graphics_swap_buffer(graphics_ctx_t *ctx);
+void graphics_pixel(graphics_ctx_t *ctx, int x, int y, uint32_t color);
+void graphics_draw_char(graphics_ctx_t *ctx, int x, int y, char c);
+void graphics_scroll(graphics_ctx_t *ctx, uint32_t pixels);
 
-void set_origin(GRAPHICS_CONTEXT *ctx, int x, int y);
-void fill(GRAPHICS_CONTEXT *ctx);
-void set_fill(GRAPHICS_CONTEXT *ctx, uint32_t color);
-void stroke(GRAPHICS_CONTEXT *ctx);
-void set_stroke(GRAPHICS_CONTEXT *ctx, uint32_t color);
-void set_line_width(GRAPHICS_CONTEXT *ctx, uint32_t thickness);
-void draw_text(GRAPHICS_CONTEXT *ctx, int x, int y, char *txt);
-void move_to(GRAPHICS_CONTEXT *ctx, int x, int y);
-void line_to(GRAPHICS_CONTEXT *ctx, int x, int y);
-void rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h);
-void stroke_rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h);
-void fill_rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h);
-void clear_rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h);
+void graphics_set_origin(graphics_ctx_t *ctx, int x, int y);
+void graphics_fill(graphics_ctx_t *ctx);
+void graphics_set_fill(graphics_ctx_t *ctx, uint32_t color);
+void graphics_stroke(graphics_ctx_t *ctx);
+void graphics_set_stroke(graphics_ctx_t *ctx, uint32_t color);
+void graphics_set_line_width(graphics_ctx_t *ctx, uint32_t thickness);
+void graphics_draw_text(graphics_ctx_t *ctx, int x, int y, char *txt);
+void graphics_move_to(graphics_ctx_t *ctx, int x, int y);
+void graphics_line_to(graphics_ctx_t *ctx, int x, int y);
+void graphics_rect(graphics_ctx_t *ctx, int x, int y, int w, int h);
+void graphics_stroke_rect(graphics_ctx_t *ctx, int x, int y, int w, int h);
+void graphics_fill_rect(graphics_ctx_t *ctx, int x, int y, int w, int h);
+void graphics_clear_rect(graphics_ctx_t *ctx, int x, int y, int w, int h);
 
-uint8_t get_font_width();
-uint8_t get_font_height();
+uint8_t graphics_get_font_width();
+uint8_t graphics_get_font_height();
 
-uint32_t get_screen_width();
-uint32_t get_screen_height();
+uint32_t graphics_get_screen_width();
+uint32_t graphics_get_screen_height();
 
-uint32_t get_ctx_width(GRAPHICS_CONTEXT *ctx);
-uint32_t get_ctx_height(GRAPHICS_CONTEXT *ctx);
-uint32_t get_ctx_pitch(GRAPHICS_CONTEXT *ctx);
+uint32_t graphics_get_ctx_width(graphics_ctx_t *ctx);
+uint32_t graphics_get_ctx_height(graphics_ctx_t *ctx);
+uint32_t graphics_get_ctx_pitch(graphics_ctx_t *ctx);
 
-struct GRAPHICS_FRAMEBUFFER get_framebuffer();
-
-#endif
+struct graphics_framebuffer graphics_get_framebuffer();
 

@@ -8,72 +8,20 @@
 #include <util/logger.h>
 #include <graphics/graphics.h>
 
-enum __graphics_drawing_mode { NONE, RECT, ELLIPSE, TEXT, LINE };
-
-enum __graphics_active_buffer { FRAMEBUFFER, BUFFER0, BUFFER1 };
-
-struct __graphics_context {
-    int x_offset;
-    int y_offset;
-    int ctx_width;
-    int ctx_height;
-    uint32_t pitch;
-
-    enum GRAPHICS_BUFFER_COUNT buffer_count;
-
-    size_t buffer_size;
-    void *buffer;
-    void *buffer0;
-    void *buffer1;
-
-    enum __graphics_active_buffer current_back_buffer;
-
-    // draw origin
-    int origin_x;
-    int origin_y;
-
-    // Draw details
-    int x;
-    int y;
-    int w;
-    int h;
-
-    // Line end
-    int line_x;
-    int line_y;
-    int line_width;
-
-    // Line color in different sizes for when needed
-    uint64_t stroke_64;
-    uint32_t stroke_32;
-
-    // Fill color in different sizes for when needed
-    uint64_t fill_64;
-    uint32_t fill_32;
-
-    enum __graphics_drawing_mode mode;
-};
-
-static int init = 0;
-
-static inline uint64_t color32_to_color64(uint32_t clr)
-{
+static inline uint64_t color32_to_color64(uint32_t clr) {
     return (((uint64_t)clr) << 32) | (uint64_t)clr;
 }
 
-static int g_abs(int n)
-{
+static int g_abs(int n) {
     if (n >= 0)
         return n;
 
     return n * -1;
 }
 
-static struct GRAPHICS_FRAMEBUFFER _framebuffer;
+static struct graphics_framebuffer _framebuffer;
 
-int graphics_init(struct font *font)
-{
-    // Ensure we got a framebuffer.
+int graphics_init(struct font *font) {
 
     struct limine_framebuffer *framebuffer = boot_info.lfb;
 
@@ -93,19 +41,16 @@ int graphics_init(struct font *font)
 
     _framebuffer.valid = 1;
 
-    init = 1;
-
     return 0;
 }
 
-GRAPHICS_CONTEXT *graphics_get_ctx(enum GRAPHICS_BUFFER_COUNT buffer_count,
-                                   int x, int y, int width, int height)
-{
+graphics_ctx_t *graphics_get_ctx(enum graphics_buffer_count buffer_count,
+                                   int x, int y, int width, int height) {
     if (_framebuffer.valid == 0) {
         return NULL;
     }
 
-    GRAPHICS_CONTEXT *ctx = kmalloc(sizeof(GRAPHICS_CONTEXT));
+    graphics_ctx_t *ctx = kmalloc(sizeof(graphics_ctx_t));
     if (ctx == NULL) {
         return NULL;
     }
@@ -118,26 +63,25 @@ GRAPHICS_CONTEXT *graphics_get_ctx(enum GRAPHICS_BUFFER_COUNT buffer_count,
     ctx->ctx_height = height;
     ctx->pitch = width * (_framebuffer.bpp / 8);
 
-    // Default buffer state
     ctx->buffer0 = NULL;
     ctx->buffer1 = NULL;
     ctx->current_back_buffer = FRAMEBUFFER;
     ctx->buffer = _framebuffer.address;
     ctx->buffer_size = width * height * (_framebuffer.bpp / 8);
 
-    set_origin(ctx, 0, 0);
-    rect(ctx, 0, 0, 0, 0);
-    move_to(ctx, 0, 0);
-    set_fill(ctx, 0x00000000);   // black
-    set_stroke(ctx, 0x00ffffff); // white
-    set_line_width(ctx, 4);      // 4 px
+    graphics_set_origin(ctx, 0, 0);
+    graphics_rect(ctx, 0, 0, 0, 0);
+    graphics_move_to(ctx, 0, 0);
+    graphics_set_fill(ctx, 0x00000000);
+    graphics_set_stroke(ctx, 0x00FFFFFF);
+    graphics_set_line_width(ctx, 4);
 
-    //  Buffer count init
     if (buffer_count == DOUBLE) {
         ctx->buffer0 =
             kmalloc(ctx->ctx_width * ctx->ctx_height * (_framebuffer.bpp / 8));
 
         if (ctx->buffer0 == NULL) {
+            kerror("kmalloc call failed");
             return NULL;
         }
 
@@ -163,14 +107,12 @@ GRAPHICS_CONTEXT *graphics_get_ctx(enum GRAPHICS_BUFFER_COUNT buffer_count,
         return NULL;
     }
 
-    log_debug("_framebuffer.font->putc points to 0x%016llx", _framebuffer.font->putc);
-    clear_rect(ctx, 0, 0, ctx->ctx_width, ctx->ctx_height);
-    swap_buffer(ctx);
+    graphics_clear_rect(ctx, 0, 0, ctx->ctx_width, ctx->ctx_height);
+    graphics_swap_buffer(ctx);
     return ctx;
 }
 
-int graphics_destroy_ctx(GRAPHICS_CONTEXT *ctx)
-{
+int graphics_destroy_ctx(graphics_ctx_t *ctx) {
     if (ctx == NULL)
         return 1;
 
@@ -186,9 +128,7 @@ int graphics_destroy_ctx(GRAPHICS_CONTEXT *ctx)
     return 0;
 }
 
-void swap_buffer(GRAPHICS_CONTEXT *ctx)
-{
-    // If single buffering there is no need to swap anything
+void graphics_swap_buffer(graphics_ctx_t *ctx) {
     if (ctx->current_back_buffer == FRAMEBUFFER)
         return;
 
@@ -201,7 +141,6 @@ void swap_buffer(GRAPHICS_CONTEXT *ctx)
     uint32_t *b_offset = ctx->buffer;
 
     for (row = top_row; row < bottom_row; row++) {
-
         asm volatile("cld\n"
             "rep movsq" ::"S"(b_offset),
             "D"(f_offset), "c"(ctx->ctx_width / 2));
@@ -210,11 +149,9 @@ void swap_buffer(GRAPHICS_CONTEXT *ctx)
         b_offset += ctx->ctx_width;
     }
 
-    // If double buffering then there is no back buffer swap
     if (ctx->buffer_count == DOUBLE)
         return;
 
-    // Swap target buffers
     if (ctx->current_back_buffer == BUFFER0) {
         ctx->buffer = ctx->buffer1;
         ctx->current_back_buffer = BUFFER1;
@@ -224,14 +161,12 @@ void swap_buffer(GRAPHICS_CONTEXT *ctx)
     }
 }
 
-void set_origin(GRAPHICS_CONTEXT *ctx, int x, int y)
-{
+void graphics_set_origin(graphics_ctx_t *ctx, int x, int y) {
     ctx->origin_x = x;
     ctx->origin_y = y;
 }
 
-void fill(GRAPHICS_CONTEXT *ctx)
-{
+void fill(graphics_ctx_t *ctx) {
     if (ctx->mode == RECT) {
         int left = ctx->x + ctx->origin_x;
         int right = left + ctx->w;
@@ -271,61 +206,58 @@ void fill(GRAPHICS_CONTEXT *ctx)
     }
 }
 
-void set_fill(GRAPHICS_CONTEXT *ctx, uint32_t color)
-{
+void graphics_set_fill(graphics_ctx_t *ctx, uint32_t color) {
     ctx->fill_64 = color32_to_color64(color);
     ctx->fill_32 = color;
 }
 
-static void render_line(GRAPHICS_CONTEXT *ctx, int x0, int y0, int x1, int y1)
-{
+static void render_line(graphics_ctx_t *ctx, int x0, int y0, int x1, int y1) {
     int dx = g_abs(x1 - x0);
     int sx = x0 < x1 ? 1 : -1;
     int dy = -g_abs(y1 - y0);
     int sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy; /* error value e_xy */
+    int err = dx + dy;
 
     if (sx < 0 || sx >= ctx->ctx_width || sy < 0 || sy >= ctx->ctx_height) {
         return;
     }
     while (1) {
-        pixel(ctx, x0, y0, ctx->stroke_32);
+        graphics_pixel(ctx, x0, y0, ctx->stroke_32);
 
         if (x0 == x1 && y0 == y1)
             break;
 
         int e2 = 2 * err;
 
-        if (e2 >= dy) { /* e_xy+e_x > 0 */
+        if (e2 >= dy) {
             err += dy;
             x0 += sx;
         }
-        if (e2 <= dx) { /* e_xy+e_y < 0 */
+        if (e2 <= dx) {
             err += dx;
             y0 += sy;
         }
     }
 }
 
-void stroke(GRAPHICS_CONTEXT *ctx)
-{
+void graphics_stroke(graphics_ctx_t *ctx) {
     int left = ctx->x;
     int top = ctx->y;
     int right = left + ctx->w;
     int bottom = top + ctx->h;
 
     if (ctx->mode == RECT) {
-        move_to(ctx, left, top);
-        line_to(ctx, right, top);
-        stroke(ctx);
-        line_to(ctx, right, bottom);
-        stroke(ctx);
-        line_to(ctx, left, bottom);
-        stroke(ctx);
-        line_to(ctx, left, top);
-        stroke(ctx);
+        graphics_move_to(ctx, left, top);
+        graphics_line_to(ctx, right, top);
+        graphics_stroke(ctx);
+        graphics_line_to(ctx, right, bottom);
+        graphics_stroke(ctx);
+        graphics_line_to(ctx, left, bottom);
+        graphics_stroke(ctx);
+        graphics_line_to(ctx, left, top);
+        graphics_stroke(ctx);
         ctx->mode = RECT;
-        move_to(ctx, left, top);
+        graphics_move_to(ctx, left, top);
     } else if (ctx->mode == LINE) {
         int x0 = ctx->x;
         int y0 = ctx->y;
@@ -338,19 +270,16 @@ void stroke(GRAPHICS_CONTEXT *ctx)
     }
 }
 
-void set_stroke(GRAPHICS_CONTEXT *ctx, uint32_t color)
-{
+void graphics_set_stroke(graphics_ctx_t *ctx, uint32_t color) {
     ctx->stroke_64 = color32_to_color64(color);
     ctx->stroke_32 = color;
 }
 
-void set_line_width(GRAPHICS_CONTEXT *ctx, uint32_t thickness)
-{
+void graphics_set_line_width(graphics_ctx_t *ctx, uint32_t thickness) {
     ctx->line_width = thickness;
 }
 
-void move_to(GRAPHICS_CONTEXT *ctx, int x, int y)
-{
+void graphics_move_to(graphics_ctx_t *ctx, int x, int y) {
     ctx->x = x;
     ctx->y = y;
     ctx->line_x = x;
@@ -358,18 +287,16 @@ void move_to(GRAPHICS_CONTEXT *ctx, int x, int y)
     ctx->mode = NONE;
 }
 
-void line_to(GRAPHICS_CONTEXT *ctx, int x, int y)
-{
+void graphics_line_to(graphics_ctx_t *ctx, int x, int y) {
     ctx->x = ctx->line_x;
     ctx->y = ctx->line_y;
     ctx->line_x = x;
     ctx->line_y = y;
     ctx->mode = LINE;
-    stroke(ctx);
+    graphics_stroke(ctx);
 }
 
-void rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h)
-{
+void graphics_rect(graphics_ctx_t *ctx, int x, int y, int w, int h) {
     ctx->x = x;
     ctx->y = y;
     ctx->w = w;
@@ -377,52 +304,44 @@ void rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h)
     ctx->mode = RECT;
 }
 
-void stroke_rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h)
-{
-    rect(ctx, x, y, w, h);
-    stroke(ctx);
+void graphics_stroke_rect(graphics_ctx_t *ctx, int x, int y, int w, int h) {
+    graphics_rect(ctx, x, y, w, h);
+    graphics_stroke(ctx);
 }
 
-void fill_rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h)
-{
-    rect(ctx, x, y, w, h);
+void graphics_fill_rect(graphics_ctx_t *ctx, int x, int y, int w, int h) {
+    graphics_rect(ctx, x, y, w, h);
     fill(ctx);
 }
 
-void clear_rect(GRAPHICS_CONTEXT *ctx, int x, int y, int w, int h)
-{
+void graphics_clear_rect(graphics_ctx_t *ctx, int x, int y, int w, int h) {
     uint32_t color = ctx->fill_32;
-    set_fill(ctx, 0x00000000);
-    fill_rect(ctx, x - ctx->origin_x, y - ctx->origin_y, w, h);
-    set_fill(ctx, color);
+    graphics_set_fill(ctx, 0x00000000);
+    graphics_fill_rect(ctx, x - ctx->origin_x, y - ctx->origin_y, w, h);
+    graphics_set_fill(ctx, color);
 }
 
-void draw_char(GRAPHICS_CONTEXT *ctx, int x, int y, char c)
-{
+void graphics_draw_char(graphics_ctx_t *ctx, int x, int y, char c) {
     if (ctx == 0) {
-        log_error("NOOOOOOOOOOOOOOOOOOOOOOOOOOO!");
         return;
     }
-    log_debug("draw_char(ctx=0x%016llx, x=%d, y=%d) { _framebuffer.font->putc points to 0x%016llx }", ctx, x, y, _framebuffer.font->putc);
     _framebuffer.font->putc(ctx, x, y, c, ctx->stroke_32);
 }
 
-void draw_text(GRAPHICS_CONTEXT *ctx, int x, int y, char *txt)
-{
+void graphics_draw_text(graphics_ctx_t *ctx, int x, int y, char *txt) {
     int sx = x + ctx->origin_x;
     int sy = y + ctx->origin_y;
 
     int i = 0;
     int offset = 0;
     while (txt[i] != '\0') {
-        draw_char(ctx, sx + offset, sy, txt[i]);
+        graphics_draw_char(ctx, sx + offset, sy, txt[i]);
         i++;
-        offset += get_font_width();
+        offset += graphics_get_font_width();
     }
 }
 
-void pixel(GRAPHICS_CONTEXT *ctx, int x, int y, uint32_t color)
-{
+void graphics_pixel(graphics_ctx_t *ctx, int x, int y, uint32_t color) {
     int sx = x + ctx->origin_x;
     int sy = y + ctx->origin_y;
 
@@ -435,24 +354,15 @@ void pixel(GRAPHICS_CONTEXT *ctx, int x, int y, uint32_t color)
     *((uint32_t *)(sy * ctx->pitch + (sx * 4) + (uint64_t)ctx->buffer)) = color;
 }
 
-/**
- * Scrolls the graphics buffer by the given amount of pixels. Works best when
- * using double/triple buffering.
- */
-void scroll(GRAPHICS_CONTEXT *ctx, uint32_t pixels)
-{
-    // TODO update for multibuffers...
-
+void graphics_scroll(graphics_ctx_t *ctx, uint32_t pixels) {
     if (ctx->buffer_count == SINGLE &&
-        get_ctx_width(ctx) != get_screen_width()) {
+        graphics_get_ctx_width(ctx) != graphics_get_screen_width()) {
         panic("Not yet implemented!");
     } else if (ctx->buffer_count == DOUBLE) {
         uint32_t size = (ctx->ctx_height - pixels) * ctx->pitch;
         void *src_ptr = ctx->buffer + (pixels * ctx->pitch);
         void *dst_ptr = ctx->buffer;
 
-        // Note: Assumes 8 byte alignment and length is a multiple of 8
-        // bytes.
         asm volatile("cld\n"
             "rep movsq" ::"S"(src_ptr),
             "D"(dst_ptr), "c"(size / 8));
@@ -464,19 +374,19 @@ void scroll(GRAPHICS_CONTEXT *ctx, uint32_t pixels)
     }
 }
 
-uint8_t get_font_width() { return _framebuffer.font->width; }
+uint8_t graphics_get_font_width() { return _framebuffer.font->width; }
 
-uint8_t get_font_height() { return _framebuffer.font->height; }
+uint8_t graphics_get_font_height() { return _framebuffer.font->height; }
 
-uint32_t get_screen_width() { return _framebuffer.width; }
+uint32_t graphics_get_screen_width() { return _framebuffer.width; }
 
-uint32_t get_screen_height() { return _framebuffer.height; }
+uint32_t graphics_get_screen_height() { return _framebuffer.height; }
 
-uint32_t get_ctx_width(GRAPHICS_CONTEXT *ctx) { return ctx->ctx_width; }
+uint32_t graphics_get_ctx_width(graphics_ctx_t *ctx) { return ctx->ctx_width; }
 
-uint32_t get_ctx_height(GRAPHICS_CONTEXT *ctx) { return ctx->ctx_height; }
+uint32_t graphics_get_ctx_height(graphics_ctx_t *ctx) { return ctx->ctx_height; }
 
-uint32_t get_ctx_pitch(GRAPHICS_CONTEXT *ctx) { return ctx->pitch; }
+uint32_t graphics_get_ctx_pitch(graphics_ctx_t *ctx) { return ctx->pitch; }
 
-struct GRAPHICS_FRAMEBUFFER get_framebuffer() { return _framebuffer; }
+struct graphics_framebuffer graphics_get_framebuffer() { return _framebuffer; }
 

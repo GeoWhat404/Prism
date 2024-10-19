@@ -20,7 +20,7 @@ typedef struct {
     uint64_t total_pages;
 } phys_mem_ctx_t;
 
-static phys_mem_ctx_t pmm_ctx = {0};
+static phys_mem_ctx_t pmm_ctx = { 0 };
 
 // aligns the size
 static size_t page_align_size(size_t bytes) {
@@ -50,7 +50,7 @@ static uint64_t pmm_addr_to_page_idx(phys_mem_ctx_t *ctx, phys_addr_t addr) {
         return INVALID_PHYS;
     }
 
-    int page_idx = addr / PAGE_BYTE_SIZE;
+    uint64_t page_idx = addr / PAGE_BYTE_SIZE;
 
     if (page_idx >= ctx->total_pages)
         return INVALID_PHYS;
@@ -74,12 +74,11 @@ static void pmm_free_page(phys_mem_ctx_t *ctx, uintptr_t page_idx) {
 }
 
 // determines if a set of pages can be allocated at a given index contiguously
-static bool pmm_can_store_pages(uintptr_t page_idx,
-                                size_t pages,
-                                size_t total_pages) {
+static bool pmm_can_store_pages(uintptr_t page_idx, size_t pages, size_t total_pages) {
     for (uintptr_t i = page_idx; i < page_idx + pages; i++) {
-        if (i >= total_pages || pmm_is_page_used(&pmm_ctx, page_idx))
+        if (i >= total_pages || pmm_is_page_used(&pmm_ctx, i)) {
             return false;
+        }
     }
     return true;
 }
@@ -134,7 +133,13 @@ bool pmm_reserve_mem(const phys_addr_t phys, const size_t bytes) {
     }
 
     size_t page_count = pmm_bytes_to_pages(bytes);
-    for (uintptr_t i = page_idx; i < page_idx + page_count; i++) {
+    uint64_t page_idx_end = page_idx + page_count;
+    if (page_idx_end >= pmm_ctx.total_pages) {
+        kwarn("No more pages :(");
+        return false;
+    }
+
+    for (uintptr_t i = page_idx; i < page_idx_end; i++) {
         if (pmm_is_page_used(&pmm_ctx, i)) {
             kwarn("Cannot reserve a reserved page (%d)", i);
             return false;
@@ -185,12 +190,13 @@ mem_bitmap_t pmm_initialize(void) {
         if (entry->type != LIMINE_MEMMAP_USABLE || entry->length < bitmap_size)
             continue;
 
-        if (mm_entry == 0 || entry->length < mm_entry->length)
+        if (mm_entry == 0 || entry->length > mm_entry->length)
             mm_entry = entry;
     }
 
     if (mm_entry == 0)
         panic("could not find a mem region for the paging bitmap");
+
 
     pmm_ctx.total_pages = total_memory / PAGE_BYTE_SIZE;
     pmm_ctx.used_pages = total_memory / PAGE_BYTE_SIZE;
