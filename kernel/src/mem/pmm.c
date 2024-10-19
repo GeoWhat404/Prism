@@ -52,7 +52,7 @@ static uint64_t pmm_addr_to_page_idx(phys_mem_ctx_t *ctx, phys_addr_t addr) {
 
     int page_idx = addr / PAGE_BYTE_SIZE;
 
-    if (page_idx >= (int)ctx->total_pages)
+    if (page_idx >= ctx->total_pages)
         return INVALID_PHYS;
 
     return page_idx;
@@ -113,14 +113,16 @@ bool pmm_free_mem(const phys_addr_t phys, const size_t bytes) {
     }
 
     size_t page_count = pmm_bytes_to_pages(bytes);
-    for (uintptr_t i = page_idx; i < page_idx + page_count; i++) {
-        if (!pmm_is_page_used(&pmm_ctx, i)) {
-            kwarn("Cannot free a free page (%llu)", i);
-            return false;
-        }
+    uint64_t page_idx_end = page_idx + page_count;
+    if (page_idx_end >= pmm_ctx.total_pages) {
+        kerror("out of bounds");
+        return false;
+    }
 
+    for (uint64_t i = page_idx; i < page_idx_end; i++) {
         pmm_free_page(&pmm_ctx, i);
     }
+
     return true;
 }
 
@@ -152,13 +154,14 @@ phys_addr_t pmm_alloc_mem(const size_t bytes) {
     }
 
     phys_addr_t addr = page_idx * PAGE_BYTE_SIZE;
-    if (!pmm_reserve_mem(addr, bytes))
+    if (!pmm_reserve_mem(addr, bytes)) {
         return INVALID_PHYS;
+    }
 
     return addr;
 }
 
-bool pmm_dealloc_mme(const phys_addr_t phys, const size_t bytes) {
+bool pmm_dealloc_mem(const phys_addr_t phys, const size_t bytes) {
     return pmm_free_mem(phys, bytes);
 }
 

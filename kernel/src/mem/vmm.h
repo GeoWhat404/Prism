@@ -5,6 +5,8 @@
 enum {
     PAGE_MAP_WRITABLE = 1,
     PAGE_MAP_USER = 1 << 1,
+    PAGE_MAP_CACHE_DISABLED = 1 << 2,
+    PAGE_MAP_WRITE_THROUGH = 1 << 3
 };
 
 void vmm_init(mem_bitmap_t bitmap);

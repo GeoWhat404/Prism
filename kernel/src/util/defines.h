@@ -10,6 +10,10 @@
 #define _unused __attribute__((unused))
 #define _packed __attribute__((packed))
 
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 #if defined(__clang__) || defined(__gcc__)
 #define STATIC_ASSERT _Static_assert
 #else

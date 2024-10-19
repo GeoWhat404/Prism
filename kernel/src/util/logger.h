@@ -7,18 +7,23 @@
     printf(fmt, ##__VA_ARGS__);     \
     printf("\n")
 
-#define kinfo(fmt, ...)             \
-    log_info(fmt, ##__VA_ARGS__);   \
-    printf_nl(fmt, ##__VA_ARGS__)
+#define kinfo(fmt, ...)                         \
+    do { log_info(fmt, ##__VA_ARGS__);          \
+         printf_nl(fmt, ##__VA_ARGS__);         \
+    } while(0)
 
 #define kwarn(fmt, ...)             \
-    log_warn(fmt, ##__VA_ARGS__);   \
-    printf_nl(fmt, ##__VA_ARGS__)
+    do { log_warn(fmt, ##__VA_ARGS__);          \
+         printf_nl(fmt, ##__VA_ARGS__);         \
+    } while(0)
 
 #define kerror(fmt, ...)            \
-    log_error(fmt, ##__VA_ARGS__);  \
-    printf_nl(fmt, ##__VA_ARGS__)
+    do { log_error(fmt, ##__VA_ARGS__);          \
+         printf_nl(fmt, ##__VA_ARGS__);         \
+    } while(0)
 
 #define kdebug(fmt, ...)            \
-    log_debug(fmt, ##__VA_ARGS__);  \
-    printf_nl(fmt, ##__VA_ARGS__)
+    do { log_debug(fmt, ##__VA_ARGS__);          \
+         printf_nl(fmt, ##__VA_ARGS__);         \
+    } while(0)
+

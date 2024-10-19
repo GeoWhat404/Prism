@@ -5,7 +5,7 @@
 
 #include <boot/boot.h>
 
-#define PAGE_BYTE_SIZE 4096
+#define PAGE_BYTE_SIZE 4096ull
 
 typedef void       *virt_addr_t;
 typedef uintptr_t   phys_addr_t;

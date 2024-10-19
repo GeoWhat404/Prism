@@ -1,6 +1,6 @@
 #include "panic.h"
 
-#include "fb.h"
+#include <drivers/fb.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -66,13 +66,15 @@ char *get_function_name(uint64_t addr) {
 void print_panic_msg(void) {
     fprintf(VFS_FD_STDERR, "--- < kernel panic > ---");
     fprintf(VFS_FD_STDERR,
-            "no need to panic though :)\n"
+            "\nno need to panic though :)\n"
             "reason: ");
 }
 
 void print_panic_reason(const char *fmt, va_list ap) {
     vfprintf(VFS_FD_STDERR, fmt, ap);
     fprintf(VFS_FD_STDERR, "\n");
+
+    log_error("Unformatted panic message: %s", fmt);
 }
 
 void panic(const char *fmt, ...) {
@@ -122,6 +124,4 @@ void dump_regs(registers_t *regs) {
     kerror("CR2=0x%016llx", cr2);
 
     stack_trace(10, regs->rbp, regs->rip);
-
-    fb_clear_color(COLOR(0, 0, 0), COLOR(0x88, 0xDF, 0x7C));
 }

@@ -70,9 +70,11 @@ int detect_cpu(void) {
     kinfo("--- < cpu detection > ---");
     switch (ebx) {
         case signature_INTEL_ebx:
-            return handle_intel();
+            handle_intel();
+            break;
         case signature_AMD_ebx:
-            return handle_amd();
+            handle_amd();
+            break;
         default:
             kinfo("Unknown x86 CPU detected");
             break;

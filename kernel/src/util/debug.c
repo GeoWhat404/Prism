@@ -1,6 +1,7 @@
 #include "debug.h"
 
 #include <stdio.h>
+#include "colors.h"
 
 static const char *const log_severity_colors[] = {
     [LVL_DEBUG]         = B_MAG,

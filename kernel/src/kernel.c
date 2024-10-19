@@ -1,9 +1,7 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <hal/fb.h>
 #include <hal/hal.h>
 #include <hal/pit.h>
 #include <hal/rtc.h>
@@ -25,8 +23,17 @@
 
 #include <util/logger.h>
 
+#include <drivers/fb.h>
+#include <graphics/graphics.h>
+#include <graphics/font/font.h>
+
+void init_graphics() {
+
+    }
+
 void init_mmu(void) {
     mem_init();
+    heap_print();
 
     mem_print_layout();
 
@@ -34,13 +41,30 @@ void init_mmu(void) {
 }
 
 void init_systems(void) {
-    fb_initialize(boot_info.lfb);
+    enable_sse2();
+    init_mmu();
+    struct font font;
+    if (psf2_load_font(&font) != 0) {
+        panic("This wont show 99%");
+    }
+
+    if (graphics_init(&font) != 0) {
+        panic("Will this even show?");
+    }
+
+    GRAPHICS_CONTEXT *ctx = graphics_get_ctx(DOUBLE, 0, 0, get_screen_width(), get_screen_height());
+    if (ctx == 0)
+        log_error("CTX ZERO!");
+    fb_init(ctx, get_ctx_height(ctx) / get_font_height(),
+            get_ctx_width(ctx) / get_font_width());
+
+
 
     kinfo("Prism v%s on %s", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
 
     hal_initialize();
+
     detect_cpu();
-    init_mmu();
 
     kinfo("HHDM offset: 0x%016llx", boot_info.lhhdmr->offset);
 
@@ -48,12 +72,15 @@ void init_systems(void) {
     kinfo("Current date and time (RTC): %u:%u:%u %u/%u/%u",
            time.hours, time.minutes, time.seconds,
            time.days, time.months, time.years);
+
+    while (1) {
+        hlt();
+    }
 }
 
 void kmain(void) {
     init_systems();
     kinfo("Initial setup complete in %llus", pit_get_seconds());
-    panic("He!");
 
     while (1) {
         hlt();

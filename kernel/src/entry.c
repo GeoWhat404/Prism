@@ -1,23 +1,16 @@
 #include "kernel.h"
 
-#include <stdio.h>
 #include <stdbool.h>
 
 #include <hal/panic.h>
 #include <boot/boot.h>
 #include <boot/limine.h>
 
-#include <arch/x86/fb.h>
+__attribute__((used, section(".requests_start_marker")))
+static volatile LIMINE_REQUESTS_START_MARKER;
 
 __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
-
-__attribute__((used, section(".requests")))
-static volatile struct limine_paging_mode_request paging_request = {
-    .id = LIMINE_PAGING_MODE_REQUEST,
-    .revision = 0,
-    .mode = LIMINE_PAGING_MODE_X86_64_4LVL
-};
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
@@ -55,9 +48,6 @@ static volatile struct limine_smbios_request smbios_request = {
     .revision = 0,
 };
 
-__attribute__((used, section(".requests_start_marker")))
-static volatile LIMINE_REQUESTS_START_MARKER;
-
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
@@ -70,10 +60,10 @@ void _start(void) {
         hcf();
     }
 
-    struct limine_paging_mode_response *lpagingr = paging_request.response;
-    if (lpagingr->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
-        panic("lvl4 paging not supported");
-    }
+    // struct limine_paging_mode_response *lpagingr = paging_request.response;
+    // if (lpagingr->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
+    //     panic("lvl4 paging not supported");
+    // }
 
     if (framebuffer_request.response == 0
      || framebuffer_request.response->framebuffer_count < 1) {

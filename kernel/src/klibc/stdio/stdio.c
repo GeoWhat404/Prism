@@ -216,8 +216,10 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                 }
 
                 if (number) {
-                    // Calculate value length
+                    // Variable to track if the number is negative
+                    bool is_negative = false;
                     unsigned long long num_value = 0;
+
                     if (sign) {
                         long long signed_value;
                         switch (length) {
@@ -225,18 +227,34 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                             case PRINTF_LENGTH_SHORT:
                             case PRINTF_LENGTH_DEFAULT:
                                 signed_value = va_arg(args, int);
-                                num_value = signed_value < 0 ? -signed_value : signed_value;
+                                if (signed_value < 0) {
+                                    is_negative = true;
+                                    num_value = -signed_value;
+                                } else {
+                                    num_value = signed_value;
+                                }
                                 break;
                             case PRINTF_LENGTH_LONG:
                                 signed_value = va_arg(args, long);
-                                num_value = signed_value < 0 ? -signed_value : signed_value;
+                                if (signed_value < 0) {
+                                    is_negative = true;
+                                    num_value = -signed_value;
+                                } else {
+                                    num_value = signed_value;
+                                }
                                 break;
                             case PRINTF_LENGTH_LONG_LONG:
                                 signed_value = va_arg(args, long long);
-                                num_value = signed_value < 0 ? -signed_value : signed_value;
+                                if (signed_value < 0) {
+                                    is_negative = true;
+                                    num_value = -signed_value;
+                                } else {
+                                    num_value = signed_value;
+                                }
                                 break;
                         }
                     } else {
+                        // Handle unsigned numbers as before
                         switch (length) {
                             case PRINTF_LENGTH_SHORT_SHORT:
                             case PRINTF_LENGTH_SHORT:
@@ -252,6 +270,12 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                         }
                     }
 
+                    // Print the minus sign if the number is negative
+                    if (is_negative) {
+                        fputc('-', fd);
+                    }
+
+                    // Convert number to ASCII and print it
                     char num_str[32];
                     int num_len = 0;
                     do {
@@ -260,10 +284,7 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                         num_value /= radix;
                     } while (num_value > 0);
 
-                    if (sign && ((signed long long)num_value < 0)) {
-                        num_str[num_len++] = '-';
-                    }
-
+                    // Padding logic
                     int pad_len = width > num_len ? width - num_len : 0;
 
                     if (!left_justify) {
@@ -272,6 +293,7 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                         }
                     }
 
+                    // Print the number in reverse order
                     while (num_len > 0) {
                         fputc(num_str[--num_len], fd);
                     }

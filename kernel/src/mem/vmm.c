@@ -112,6 +112,8 @@ static void vmm_set_page_entry(union page_entry *entry,
     entry->present = true;
     entry->read_write = flags & PAGE_MAP_WRITABLE ? true : false;
     entry->user_supervisor = flags & PAGE_MAP_USER ? true : false;
+    entry->cache_disabled = flags & PAGE_MAP_CACHE_DISABLED ? true : false;
+    entry->write_through = flags & PAGE_MAP_WRITE_THROUGH ? true : false;
 
     uint64_t phys_mask = (1ull << (vmm_ctx.phys_addr_size - 12)) - 1;
     uint64_t phys_idx = phys / PAGE_BYTE_SIZE;
@@ -170,6 +172,9 @@ static bool vmm_map_page(phys_addr_t phys, virt_addr_t virt, uint32_t flags) {
     } else {
         vmm_set_page_entry(pt_entry, phys, flags);
     }
+
+    if (read_cr3() == (uintptr_t) vmm_ctx.pml4_table)
+        flush_tlb(virt);
 
     vmm_try_restock_pt_pool();
 
@@ -287,6 +292,10 @@ void vmm_init(mem_bitmap_t bitmap) {
 
     for (uint64_t i = 0; i < PT_POOL_SIZE; i++) {
         phys_addr_t phys = pmm_alloc_mem(1);
+        if (phys == INVALID_PHYS) {
+            panic("Failed to allocate page for page table pool");
+        }
+
         virt_addr_t virt = mem_phys_to_virt(phys);
 
         memset((void *)virt, 0, PAGE_BYTE_SIZE);
@@ -324,7 +333,11 @@ void vmm_init(mem_bitmap_t bitmap) {
                 if (entry->type == LIMINE_MEMMAP_KERNEL_AND_MODULES)
                     virt = (virt_addr_t) boot_info.kernel_virt_base;
 
-                vmm_map(phys, virt, entry->length, PAGE_MAP_WRITABLE);
+                if (entry->type == LIMINE_MEMMAP_FRAMEBUFFER)
+                    vmm_map(phys, virt, entry->length, PAGE_MAP_WRITABLE | PAGE_MAP_CACHE_DISABLED);
+
+                else
+                    vmm_map(phys, virt, entry->length, PAGE_MAP_WRITABLE);
                 pages_mapped += entry->length / PAGE_BYTE_SIZE;
                 break;
             }

@@ -57,7 +57,6 @@ override KCFLAGS += \
     -mno-sse \
 	-nostartfiles \
 	-nostdlib \
-    -mno-sse2 \
     -mno-red-zone -fno-stack-protector \
     -fno-stack-check \
     -fno-lto \

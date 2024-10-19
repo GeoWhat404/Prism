@@ -18,6 +18,9 @@ typedef struct heap_blk {
 
 static heap_blk_t *root_blk = 0;
 static heap_blk_t *first_free_blk = 0;
+static uintptr_t heap_end;
+static uintptr_t heap_address;
+static size_t heap_size = 0;
 
 void heap_init(void *heap_addr, size_t size) {
     kinfo("Heap: Initializing");
@@ -40,7 +43,38 @@ void heap_init(void *heap_addr, size_t size) {
 
     first_free_blk = root_blk;
 
+    heap_address = (uintptr_t)heap_addr;
+    heap_size += size;
+    heap_end = (uintptr_t)heap_addr + size;
+
     kinfo("Heap: Completed Initialization");
+}
+
+static void expand_heap(size_t minimum_expansion_size) {
+	size_t new_size = MAX(minimum_expansion_size, heap_size * 2) + 0x1000;
+
+    kdebug("expanding heap by %lu bytes", new_size);
+
+	phys_addr_t physical_address = INVALID_PHYS;
+	if ((physical_address = pmm_alloc_mem(new_size)) == INVALID_PHYS) {
+		panic("failed to allocate new physical memory to expand heap.");
+	}
+
+	virt_addr_t virtual_address = (virt_addr_t)(heap_address + heap_size);
+	if (vmm_map(physical_address, virtual_address, new_size, PAGE_MAP_WRITABLE)) {
+		panic("failed to map new physical memory to expand heap.\n");
+	}
+
+	heap_blk_t *last_block = root_blk;
+	while (last_block->next != NULL) {
+		last_block = last_block->next;
+	}
+
+	if (last_block->free == true) {
+		last_block->length += new_size;
+	} else {
+		panic("last heap block is not free. Time to implement this case\n");
+	}
 }
 
 void heap_print(void) {
@@ -66,8 +100,16 @@ void *kmalloc(size_t size) {
         blk = blk->next_free;
 
     if (blk == 0) {
-        panic("heap out of memory");
-        return 0;           // unreachable but ok
+        expand_heap(size);
+
+        blk = first_free_blk;
+        while (blk != 0 && blk->length < size)
+            blk = blk->next_free;
+
+        if (blk == 0) {
+            panic("heap out of memory");
+            return 0;
+        }
     }
 
     if (blk->length == size) {
