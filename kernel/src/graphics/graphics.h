@@ -43,26 +43,21 @@ typedef struct __graphics_context {
 
     enum __graphics_active_buffer current_back_buffer;
 
-    // draw origin
     int origin_x;
     int origin_y;
 
-    // Draw details
     int x;
     int y;
     int w;
     int h;
 
-    // Line end
     int line_x;
     int line_y;
     int line_width;
 
-    // Line color in different sizes for when needed
     uint64_t stroke_64;
     uint32_t stroke_32;
 
-    // Fill color in different sizes for when needed
     uint64_t fill_64;
     uint32_t fill_32;
 

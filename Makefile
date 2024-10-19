@@ -3,7 +3,8 @@ override MAKEFLAGS += -rR
 
 override IMAGE_NAME := prism
 
-QEMU_FLAGS= -rtc base=localtime -device VGA,edid=on,xres=1920,yres=1080 -m 8G
+QEMU_FLAGS= -rtc base=localtime -device VGA,edid=on,xres=1920,yres=1080 -m 5G
+# QEMU_FLAGS= -rtc base=localtime
 
 .PHONY: all
 all: $(IMAGE_NAME).iso
@@ -14,6 +15,7 @@ all-hdd: $(IMAGE_NAME).hdd
 .PHONY: dbg
 dbg: $(IMAGE_NAME).iso
 	qemu-system-x86_64 -s -S -debugcon stdio -M q35 -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
+
 .PHONY: run
 run: $(IMAGE_NAME).iso
 	qemu-system-x86_64 -debugcon stdio -M q35 -cdrom $(IMAGE_NAME).iso -boot d $(QEMU_FLAGS)
