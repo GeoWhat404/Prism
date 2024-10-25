@@ -21,14 +21,14 @@
 #define B_CYN "\e[1;36m"
 #define B_WHT "\e[1;37m"
 
-#define COLOR_BLACK   0x141414
-#define COLOR_RED     0xFB4934
-#define COLOR_GREEN   0x6FC276
-#define COLOR_YELLOW  0xFABD2F
-#define COLOR_BLUE    0x90E4C1
-#define COLOR_MAGENTA 0xd3869b
-#define COLOR_CYAN    0x93E9BE
-#define COLOR_WHITE   0xFFFFED
+#define COLOR_BLACK   0x141414u
+#define COLOR_RED     0xFB4934u
+#define COLOR_GREEN   0x6FC276u
+#define COLOR_YELLOW  0xFABD2Fu
+#define COLOR_BLUE    0x90E4C1u
+#define COLOR_MAGENTA 0xd3869bu
+#define COLOR_CYAN    0x93E9BEu
+#define COLOR_WHITE   0xFFFFEDu
 
-#define COLOR_RGB(r, g, b) ((b) | (g << 8) | (r << 16))
-#define COLOR(rgb) COLOR_RGB(rgb << 16, rgb << 8, rgb)
+#define COLOR_RGB(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
+#define COLOR(rgb) COLOR_RGB((rgb) << 16, (rgb) << 8, (rgb))

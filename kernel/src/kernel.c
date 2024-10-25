@@ -79,10 +79,10 @@ void kmain(void) {
         panic("failed to initialize the graphics library");
 
     g_ctx = graphics_get_ctx(DOUBLE, 0, 0, graphics_get_screen_width(),
-                             graphics_get_screen_height());
+                                           graphics_get_screen_height());
 
     if (!g_ctx)
-        panic("graphics context");
+        kmalloc_null_error();
     fb_init(g_ctx, graphics_get_ctx_height(g_ctx) / graphics_get_font_height(),
             graphics_get_ctx_width(g_ctx) / graphics_get_font_width());
 

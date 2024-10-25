@@ -1,4 +1,5 @@
 #include "panic.h"
+#include "instr.h"
 
 #include <drivers/fb.h>
 
@@ -63,23 +64,34 @@ char *get_function_name(uint64_t addr) {
     return "INVALID";
 }
 
-void print_panic_msg(void) {
-    kerror("--- < kernel panic > ---");
-    kerror("There is no need for YOU to panic");
-}
-
-void print_panic_reason(const char *fmt, va_list ap) {
-    char buffer[200];
-    vsnprintf(buffer, 200, fmt, ap);
-    kerror("reason: %s", buffer, ap);
+void print_panic_msg(const char *reason) {
+    kerror("");
+    kerror("                      @%%%%%%%%%%%%%%%%%%%%%%%%%%@                                                    ");
+    kerror("                  @%%%%#################%%%%%%                                                ");
+    kerror("              @%%%%#####=:::::::::::::=#####%%%%%%                                            ");
+    kerror("            %%%%###*:::::::::::::::::::::::####%%%%                                          ");
+    kerror("          %%##**-:::::::::::::::::::::::::::-**##%%             _  __                    _ ");
+    kerror("        %%##**:-------------------------------:**##%%          | |/ /___ _ __ _ __   ___| |");
+    kerror("       %%#**+-----------------------------------+**#%%         | ' // _ \\ '__| '_ \\ / _ \\ |");
+    kerror("      #**+=--------------------------------------+**#        | . \\  __/ |  | | | |  __/ |");
+    kerror("     #*++=-------:::-------------------:::-------=++*#       |_|\\_\\___|_|  |_| |_|\\___|_|");
+    kerror("    #*+++----:@#*+++*#@------------:@**+++*#@-----+++*#      |  _ \\ __ _ _ __ (_) ___| | ");
+    kerror("   %%*++==---@*=--::::-=#----------:#=-::::--=*@---==++*%%     | |_) / _` | '_ \\| |/ __| | ");
+    kerror("   *+===--:%%=-:.......:=@:-------:@=:.......:-=%%:--===+#     |  __/ (_| | | | | | (__|_| ");
+    kerror("  #*+===-:@=:....   ...-%%---------#-...    ...:=@:-===+*#    |_|   \\__,_|_| |_|_|\\___(_) ");
+    kerror("  #+==----+:....  .....-%%:-------:%%-.....    ..:+----==+#                                ");
+    kerror(" @*+=----+=:..........:+:---------.+:..........:=+----=+*@  +----------------------------------------------+");
+    kerror(" @*+=----:*:.........:+:-----------:+:.........:*:----==*@   Reason: %s                  ", reason);
+    kerror("  #+=------+:.....::=@.----:::::----.%%=::....::+------=+#   +----------------------------------------------+");
 }
 
 void panic(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
-    print_panic_msg();
-    print_panic_reason(fmt, ap);
+    char reason[200];
+    vsnprintf(reason, 200, fmt, ap);
+    print_panic_msg(reason);
 
     asm_dump_regs();
 }
@@ -90,35 +102,37 @@ void stack_trace(int depth, uint64_t rbp, uint64_t rip) {
     kerror("0x%016llx \t%s", rip, (rip ? get_function_name(rip) : "N/A"));
 
     stack_frame_t *stack = (stack_frame_t *)rbp;
+    char *func_name;
 
     do {
-        kerror("0x%016llx \t%s", stack->rip, (stack->rip ? get_function_name(stack->rip) : "N/A"));
+        // saves the cpu from triple faulting in some cases
+        // when a page fault occurs
+        func_name = get_function_name(stack->rip);
+        if (strcmp(func_name, "INVALID") == 0)
+            break;
+
+        kerror("0x%016llx \t%s", stack->rip, func_name);
         stack = stack->rbp;
     } while (stack && --depth && stack->rip);
-    kerror(" | This is a very sad moment :(\n");
+    kerror(" | This is a very sad moment :(");
 }
 
 void dump_regs(registers_t *regs) {
-    kerror("-- < register dump > --");
-
-    uint64_t cr2;
-    __asm__ volatile("mov %%cr2, %0" : "=r"(cr2));
-
-    kerror("RIP=0x%016llx",
-           regs->rip);
-
-    kerror("CS =0x%016llx\t\tDS =0x%016llx",
-           regs->cs, regs->ds);
-
-    kerror("RAX=0x%016llx\t\tR8 =0x%016llx", regs->rax, regs->r8);
-    kerror("RBX=0x%016llx\t\tR9 =0x%016llx", regs->rbx, regs->r9);
-    kerror("RCX=0x%016llx\t\tR10=0x%016llx", regs->rcx, regs->r10);
-    kerror("RDX=0x%016llx\t\tR11=0x%016llx", regs->rdx, regs->r11);
-    kerror("RSI=0x%016llx\t\tR12=0x%016llx", regs->rsi, regs->r12);
-    kerror("RDI=0x%016llx\t\tR13=0x%016llx", regs->rdi, regs->r13);
-    kerror("RBP=0x%016llx\t\tR14=0x%016llx", regs->rbp, regs->r14);
-    kerror("RSP=0x%016llx\t\tR15=0x%016llx", regs->usermode_rsp, regs->r15);
-    kerror("CR2=0x%016llx", cr2);
-
+    kerror("  @+=------.**=-=+%%=.--::@%%%%###%%%%+:---.=%%+=-=##.------=+@    RAX=0x%016llx  R8 =0x%016llx",   regs->rax, regs->r8);
+    kerror("   @+=-*%%@%%---:::---::::@###***###@:::::-::::-:-%%@%%*-=+@     RBX=0x%016llx  R9 =0x%016llx",     regs->rbx, regs->r9);
+    kerror("    @#*+++++*%%:--::::::##********##-::::::--:%%*+++++##@      RCX=0x%016llx  R10=0x%016llx",       regs->rcx, regs->r10);
+    kerror("     %%*+=====+*+:::::::##*********#=:::::::+*+======*%%       RDX=0x%016llx  R11=0x%016llx",       regs->rdx, regs->r11);
+    kerror("     @#+=----==+@::::::#**********#=::::::@+==----=+#@       RSI=0x%016llx  R12=0x%016llx",         regs->rsi, regs->r12);
+    kerror("      %%*=------=+%%:::::#**+++++++**=:::::%%+=------=*%%        RDI=0x%016llx  R13=0x%016llx",     regs->rdi, regs->r13);
+    kerror("      @#=-------=+%%::::**++++++++**-::::%%+=-------=#@        RBP=0x%016llx  R14=0x%016llx",       regs->rbp, regs->r14);
+    kerror("       #+---:::--=#.:::.#*+++++++*%%::::.#=---::---+#         RSP=0x%016llx  R15=0x%016llx",        regs->usermode_rsp, regs->r15);
+    kerror("       %%+=--:::--=+#:::::#*+++++*-:::::%%+=---::--=+%%         CR0=0x%016llx  CR2=0x%016llx",      read_cr0(), read_cr2());
+    kerror("       %%+=-------=+%%--:::::..:..::::---%%+=-------=+%%         CR3=0x%016llx  CR4=0x%016llx",     read_cr3(), read_cr4());
+    kerror("       #+=-------=+%%===---:::::::----==%%+=-------=+#        +----------------------------------------------+");
+    kerror("      @#+=-------=+# @@+==-------==+@@ %%+=-------=+#@        RIP=0x%016llx               ",        regs->rip);
+    kerror("      @#*===---==+*%%    @@@*+++*@@@    %%*+==----==*#@        CS =0x%016llx  DS =0x%016llx",       regs->cs, regs->ds);
+    kerror("       @%%##***+**#%%@         @         @%%#**++**##%%@        +----------------------------------------------+");
+    kerror("         @@@@@@@@@@                     @@@@@@@@@@                                       ");
+    kerror("");
     stack_trace(10, regs->rbp, regs->rip);
 }

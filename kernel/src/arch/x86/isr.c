@@ -46,15 +46,6 @@ char *exceptions[] = {
     "Reserved",
     "Reserved"};
 
-static void page_fault_handler(registers_t *regs) {
-    print_panic_msg();
-    print_panic_reason("Page Fault\n", 0);
-
-    dump_regs(regs);
-
-    __asm__ ("cli; hlt");
-}
-
 void isr_initialize(void) {
     // ISR exceptions 0 - 31
     for (int i = 0; i < 48; i++) {
@@ -63,9 +54,6 @@ void isr_initialize(void) {
 
     // Syscalls having DPL 3
     idt_set_gate(IDT_SYSCALL, (uint64_t)isr128, 0xEE);
-
-    // 0xE -> PAGE FAULT
-    isr_register_handler(0xE, page_fault_handler);
 }
 
 void isr_handle_interrupt(uint64_t rsp) {
@@ -77,8 +65,6 @@ void isr_handle_interrupt(uint64_t rsp) {
     }
 
     if (isr_handlers[cpu->interrupt] == 0) {
-        kerror("Unhandled interrupt: %s (0x%x)",
-                  exceptions[cpu->interrupt], cpu->interrupt);
         panic("%s (0x%llx)",
               exceptions[cpu->interrupt], cpu->interrupt);
     }
