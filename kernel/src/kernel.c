@@ -9,7 +9,7 @@
 #include <hal/instr.h>
 #include <hal/detect.h>
 
-#include <util/debug.h>
+#include <util/logger.h>
 #include <util/defines.h>
 #include <util/datetime.h>
 
@@ -21,11 +21,12 @@
 #include <boot/boot.h>
 #include <boot/limine.h>
 
-#include <util/logger.h>
 
 #include <drivers/fb.h>
 #include <graphics/graphics.h>
 #include <graphics/font/font.h>
+
+#include <util/colors.h>
 
 static graphics_ctx_t *g_ctx;
 
@@ -39,13 +40,13 @@ void init_systems(void) {
     init_mmu();
 }
 
-void print_mem() {
+void print_mem(void) {
     mem_print_layout();
     heap_print();
 }
 
 void print_info(void) {
-    kinfo("Prism v%s on %s", STRINGIFY(OS_VERSION), STRINGIFY(ARCH));
+    kinfo("Prism v%s on %s (compilation: %s)", STRINGIFY(OS_VERSION), STRINGIFY(ARCH), __DATE__);
 
     hal_initialize();
 
@@ -71,25 +72,38 @@ void kmain(void) {
     // so maybe fix this soontm?
     struct font font;
 
-    if (psf2_load_font(&font) != 0) {
+    if (psf2_load_font(&font) != 0)
         panic("failed to load psf2 font");
-    }
 
-    if (graphics_init(&font) != 0) {
+    if (graphics_init(&font) != 0)
         panic("failed to initialize the graphics library");
-    }
 
     g_ctx = graphics_get_ctx(DOUBLE, 0, 0, graphics_get_screen_width(),
                              graphics_get_screen_height());
 
-    if (!g_ctx) {
+    if (!g_ctx)
         panic("graphics context");
-    }
     fb_init(g_ctx, graphics_get_ctx_height(g_ctx) / graphics_get_font_height(),
             graphics_get_ctx_width(g_ctx) / graphics_get_font_width());
 
-
     print_info();
+
+    log_info(B_BLK "B_BLK");
+    log_info(B_RED "B_RED");
+    log_info(B_GRN "B_GRN");
+    log_info(B_YEL "B_YEL");
+    log_info(B_BLU "B_BLU");
+    log_info(B_MAG "B_MAG");
+    log_info(B_CYN "B_CYN");
+    log_info(B_WHT "B_WHT");
+    log_info(BLK "BLK");
+    log_info(WHT "WHT");
+    log_info(RED "RED");
+    log_info(GRN "GRN");
+    log_info(YEL "YEL");
+    log_info(BLU "BLU");
+    log_info(MAG "MAG");
+    log_info(CYN "CYN");
 
     while (1) {
         hlt();

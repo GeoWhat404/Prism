@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stddef.h>
 
-static gdt_entries_t gdt;
-static gdt_ptr_t gdtr;
-static tss_ptr_t tss;
+gdt_entries_t gdt;
+gdt_ptr_t gdtr;
+tss_ptr_t tss;
 
 void gdt_load_tss(tss_ptr_t *tss) {
 	size_t addr = (size_t)tss;

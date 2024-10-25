@@ -26,6 +26,7 @@ static const char *mem_region_names[] = {
 
 void mem_print_layout(void) {
     size_t total = 0;
+    size_t usable = 0;
 
     kinfo("MEM: Printing layout");
 
@@ -35,11 +36,15 @@ void mem_print_layout(void) {
 
         total += entry->length;
 
+        if (entry->type == LIMINE_MEMMAP_USABLE)
+            usable += entry->length;
+
         kinfo(" | 0x%016llx -> 0x%016llx size: %011llu %s",
                entry->base, entry->base + entry->length - 1,
                entry->length, mem_region_names[entry->type]);
     }
     kinfo("MEM: Total memory: %llu", total);
+    kinfo("MEM: Total usable memory: %llu", usable);
 }
 
 void mem_init(void) {
@@ -55,3 +60,14 @@ void mem_init(void) {
     heap_init((void *)heap_virt_addr, HEAP_INITIAL_SIZE);
 }
 
+uint64_t mem_get_size() {
+    uint64_t total = 0;
+    struct limine_memmap_entry *entry;
+
+    for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
+        entry = boot_info.lmmr->entries[i];
+        if (entry->type == LIMINE_MEMMAP_USABLE)
+            total += entry->length;
+    }
+    return total;
+}

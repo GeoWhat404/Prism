@@ -54,6 +54,12 @@ static volatile struct limine_smbios_request smbios_request = {
     .revision = 0,
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_smp_request smp_request = {
+    .id = LIMINE_SMP_REQUEST,
+    .revision = 0,
+};
+
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
@@ -82,6 +88,7 @@ void _start(void) {
     struct limine_kernel_file_response *lkrnl_filer = kernel_file_request.response;
     struct limine_hhdm_response *lhhdmr = hhdm_request.response;
     struct limine_smbios_response *lsmbiosr = smbios_request.response;
+    struct limine_smp_response *lsmpr = smp_request.response;
 
     boot_info.lfb = lfb;
     boot_info.lmmr = lmmr;
@@ -90,6 +97,7 @@ void _start(void) {
     boot_info.lsmbiosr = lsmbiosr;
     boot_info.kernel_phys_base = kernel_addr->physical_base;
     boot_info.kernel_virt_base = kernel_addr->virtual_base;
+    boot_info.cpu_count = lsmpr->cpu_count;
 
     kmain();
 

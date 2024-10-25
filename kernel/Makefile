@@ -62,7 +62,8 @@ override KCFLAGS += \
 	-mno-mmx \
 	-mno-red-zone \
 	-mcmodel=kernel \
-	-DDEBUG_MODE
+	-DDEBUG_MODE \
+	-std=gnu99
 
 # Internal C preprocessor flags that should not be changed by the user.
 override KCPPFLAGS := \

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <hal/panic.h>
 #include <util/logger.h>
+#include <boot/boot.h>
 
 typedef struct heap_blk {
     size_t length;
@@ -47,6 +48,7 @@ void heap_init(void *heap_addr, size_t size) {
     heap_size += size;
     heap_end = (uintptr_t)heap_addr + size;
 
+    boot_info.heap = true;
     kinfo("Heap: Completed Initialization");
 }
 
@@ -190,4 +192,8 @@ void kfree(void *ptr) {
         if (prev < first_free_blk)
             first_free_blk = prev;
     }
+}
+
+void kmalloc_null_error() {
+    panic("kmalloc call failed - returned a null pointer");
 }

@@ -2,9 +2,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
-#include <hal/vfs.h>
-
-#include <util/debug.h>
 
 #define PRINTF_STATE_NORMAL 0
 #define PRINTF_STATE_LENGTH 1
@@ -20,46 +17,85 @@
 
 #define isdigit(c) ((c) >= '0' || (c) <= '9')
 
-const int stdin = VFS_FD_STDIN;
-const int stdout = VFS_FD_STDOUT;
-const int stderr = VFS_FD_STDERR;
-const int stddbg = VFS_FD_DEBUG;
-
-void fputc(uint8_t c, fd_t fd) {
-    vfs_write(fd, &c, sizeof(c));
-}
-
-void fputs(const char *str, fd_t fd) {
-    vfs_write_s(fd, str, strlen(str));
-}
-
 const char hex_chars[] = "0123456789ABCDEF";
-void fprintf_unsigned(fd_t fd, unsigned long long number, int radix) {
-	char buffer[32];
-	int pos = 0;
 
-	// convert number to ASCII
-	do {
-        unsigned long long rem = number % radix;
-        number /= radix;
-		buffer[pos++] = hex_chars[rem];
-	} while(number > 0);
-
-	// print number in reverse order
-	while(--pos >= 0)
-		fputc(buffer[pos], fd);
+/*
+ * As the name suggests this is very sketchy and sucks
+ * and should be replaced but i dont care to do it
+ */
+size_t sketchy_num_len(unsigned long long x) {
+    if (x >= 10000000000)   return 11;
+    if (x >= 1000000000)    return 10;
+    if (x >= 100000000)     return 9;
+    if (x >= 10000000)      return 8;
+    if (x >= 1000000)       return 7;
+    if (x >= 100000)        return 6;
+    if (x >= 10000)         return 5;
+    if (x >= 1000)          return 4;
+    if (x >= 100)           return 3;
+    if (x >= 10)            return 2;
+    return 1;
 }
 
-void fprintf_signed(fd_t fd, long long number, int radix) {
-    if (number < 0) {
-        fputc('-', fd);
-        fprintf_unsigned(fd, number, radix);
-        return;
+void append_char(char *buffer, size_t *pos, size_t max_len, char c) {
+    if (*pos < max_len - 1) {
+        buffer[*pos] = c;
+        (*pos)++;
     }
-    fprintf_unsigned(fd, number, radix);
 }
 
-void vfprintf(fd_t fd, const char *fmt, va_list args) {
+void append_str(char *buffer, size_t *pos, size_t max_len, const char *str) {
+    while (*str && *pos < max_len - 1) {
+        buffer[*pos] = *str;
+        (*pos)++;
+        str++;
+    }
+}
+
+void vsnprintf_unsigned(char *buffer, size_t *pos, size_t max_len, unsigned long long number, int radix, int width, char pad_char, bool left_justify) {
+    char num_str[32];
+    int num_len = 0;
+
+    // Convert number to string
+    do {
+        int digit = number % radix;
+        num_str[num_len++] = hex_chars[digit];
+        number /= radix;
+    } while (number > 0);
+
+    int pad_len = width > num_len ? width - num_len : 0;
+
+    // Apply padding if right-justified
+    if (!left_justify) {
+        for (int i = 0; i < pad_len; i++) {
+            append_char(buffer, pos, max_len, pad_char);
+        }
+    }
+
+    // Append the number in reverse order
+    while (num_len > 0) {
+        append_char(buffer, pos, max_len, num_str[--num_len]);
+    }
+
+    // Apply padding if left-justified
+    if (left_justify) {
+        for (int i = 0; i < pad_len; i++) {
+            append_char(buffer, pos, max_len, ' ');
+        }
+    }
+}
+
+void vsnprintf_signed(char *buffer, size_t *pos, size_t max_len, long long number, int radix, int width, char pad_char, bool left_justify) {
+    if (number < 0) {
+        append_char(buffer, pos, max_len, '-');
+        vsnprintf_unsigned(buffer, pos, max_len, -number, radix, width - 1, pad_char, left_justify);
+    } else {
+        vsnprintf_unsigned(buffer, pos, max_len, number, radix, width, pad_char, left_justify);
+    }
+}
+
+void vsnprintf_internal(char *buffer, size_t max_len, const char *fmt, va_list args) {
+    size_t pos = 0;
     int state = PRINTF_STATE_NORMAL;
     int length = PRINTF_LENGTH_DEFAULT;
     int radix = 10;
@@ -80,13 +116,12 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                         pad_char = ' ';
                         break;
                     default:
-                        fputc(*fmt, fd);
+                        append_char(buffer, &pos, max_len, *fmt);
                         break;
                 }
                 break;
 
             case PRINTF_STATE_LENGTH:
-                // Handle flags: '-' (left justify) and '0' (zero padding)
                 if (*fmt == '-') {
                     left_justify = true;
                     fmt++;
@@ -95,13 +130,11 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                     fmt++;
                 }
 
-                // Parse width specifier
                 while (*fmt >= '0' && *fmt <= '9') {
                     width = width * 10 + (*fmt - '0');
                     fmt++;
                 }
 
-                // After width, expect length specifiers or type specifiers
                 switch (*fmt) {
                     case 'h':
                         length = PRINTF_LENGTH_SHORT;
@@ -146,39 +179,37 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
 
                         if (!left_justify) {
                             for (int i = 0; i < pad_len; i++) {
-                                fputc(pad_char, fd);
+                                append_char(buffer, &pos, max_len, pad_char);
                             }
                         }
-                        fputc(c, fd);
+                        append_char(buffer, &pos, max_len, c);
                         if (left_justify) {
                             for (int i = 0; i < pad_len; i++) {
-                                fputc(' ', fd);
+                                append_char(buffer, &pos, max_len, ' ');
                             }
                         }
                         break;
                     }
                     case 's': {
                         const char *s = va_arg(args, const char *);
-                        int len = 0;
-                        const char *temp = s;
-                        while (*temp++) len++;
+                        int len = strlen(s);
                         int pad_len = width > len ? width - len : 0;
 
                         if (!left_justify) {
                             for (int i = 0; i < pad_len; i++) {
-                                fputc(pad_char, fd);
+                                append_char(buffer, &pos, max_len, pad_char);
                             }
                         }
-                        fputs(s, fd);
+                        append_str(buffer, &pos, max_len, s);
                         if (left_justify) {
                             for (int i = 0; i < pad_len; i++) {
-                                fputc(' ', fd);
+                                append_char(buffer, &pos, max_len, ' ');
                             }
                         }
                         break;
                     }
                     case '%':
-                        fputc('%', fd);
+                        append_char(buffer, &pos, max_len, '%');
                         break;
 
                     case 'd':
@@ -209,101 +240,17 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
                         break;
 
                     default:
-                        // ignore invalid spec
                         break;
                 }
 
                 if (number) {
-                    // Variable to track if the number is negative
-                    bool is_negative = false;
-                    unsigned long long num_value = 0;
-
                     if (sign) {
-                        long long signed_value;
-                        switch (length) {
-                            case PRINTF_LENGTH_SHORT_SHORT:
-                            case PRINTF_LENGTH_SHORT:
-                            case PRINTF_LENGTH_DEFAULT:
-                                signed_value = va_arg(args, int);
-                                if (signed_value < 0) {
-                                    is_negative = true;
-                                    num_value = -signed_value;
-                                } else {
-                                    num_value = signed_value;
-                                }
-                                break;
-                            case PRINTF_LENGTH_LONG:
-                                signed_value = va_arg(args, long);
-                                if (signed_value < 0) {
-                                    is_negative = true;
-                                    num_value = -signed_value;
-                                } else {
-                                    num_value = signed_value;
-                                }
-                                break;
-                            case PRINTF_LENGTH_LONG_LONG:
-                                signed_value = va_arg(args, long long);
-                                if (signed_value < 0) {
-                                    is_negative = true;
-                                    num_value = -signed_value;
-                                } else {
-                                    num_value = signed_value;
-                                }
-                                break;
-                        }
+                        vsnprintf_signed(buffer, &pos, max_len, va_arg(args, long long), radix, width, pad_char, left_justify);
                     } else {
-                        // Handle unsigned numbers as before
-                        switch (length) {
-                            case PRINTF_LENGTH_SHORT_SHORT:
-                            case PRINTF_LENGTH_SHORT:
-                            case PRINTF_LENGTH_DEFAULT:
-                                num_value = va_arg(args, unsigned int);
-                                break;
-                            case PRINTF_LENGTH_LONG:
-                                num_value = va_arg(args, unsigned long);
-                                break;
-                            case PRINTF_LENGTH_LONG_LONG:
-                                num_value = va_arg(args, unsigned long long);
-                                break;
-                        }
-                    }
-
-                    // Print the minus sign if the number is negative
-                    if (is_negative) {
-                        fputc('-', fd);
-                    }
-
-                    // Convert number to ASCII and print it
-                    char num_str[32];
-                    int num_len = 0;
-                    do {
-                        int digit = num_value % radix;
-                        num_str[num_len++] = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                        num_value /= radix;
-                    } while (num_value > 0);
-
-                    // Padding logic
-                    int pad_len = width > num_len ? width - num_len : 0;
-
-                    if (!left_justify) {
-                        for (int i = 0; i < pad_len; i++) {
-                            fputc(pad_char, fd);
-                        }
-                    }
-
-                    // Print the number in reverse order
-                    while (num_len > 0) {
-                        fputc(num_str[--num_len], fd);
-                    }
-
-                    if (left_justify) {
-                        for (int i = 0; i < pad_len; i++) {
-                            fputc(' ', fd);
-                        }
+                        vsnprintf_unsigned(buffer, &pos, max_len, va_arg(args, unsigned long long), radix, width, pad_char, left_justify);
                     }
                 }
 
-                // Reset state
                 state = PRINTF_STATE_NORMAL;
                 length = PRINTF_LENGTH_DEFAULT;
                 radix = 10;
@@ -313,6 +260,19 @@ void vfprintf(fd_t fd, const char *fmt, va_list args) {
         }
         fmt++;
     }
+
+    buffer[pos] = '\0';
+}
+
+int vsnprintf(char *buffer, size_t max_len, const char *fmt, va_list args) {
+    vsnprintf_internal(buffer, max_len, fmt, args);
+    return strlen(buffer);
+}
+
+void vfprintf(fd_t fd, const char *fmt, va_list args) {
+    char buffer[200];
+    size_t written = vsnprintf(buffer, 200, fmt, args);
+    vfs_write_s(fd, buffer, written);
 }
 
 void fprintf(fd_t fd, const char *fmt, ...) {
@@ -322,33 +282,9 @@ void fprintf(fd_t fd, const char *fmt, ...) {
     va_end(args);
 }
 
-void fprint_buffer(fd_t fd, const char *msg, const void *buffer, uint32_t count) {
-    const uint8_t *u8_buffer = (const uint8_t *) buffer;
-
-    fputs(msg, fd);
-    for (uint16_t i = 0; i < count; i++) {
-        fputc(hex_chars[u8_buffer[i] >> 4], fd);
-        fputc(hex_chars[u8_buffer[i] & 0xF], fd);
-    }
-    fputs("\r\n", fd);
-}
-
-void putc(char c) {
-    fputc(c, VFS_FD_STDOUT);
-}
-
-void puts(const char *str) {
-    fputs(str, VFS_FD_STDOUT);
-}
-
 void printf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(VFS_FD_STDOUT, fmt, args);
-
     va_end(args);
-}
-
-void print_buffer(const char *msg, const void *buffer, uint32_t count) {
-    fprint_buffer(VFS_FD_STDOUT, msg, buffer, count);
 }

@@ -17,10 +17,14 @@ enum {
 void debugf(const char *fmt, ...);
 
 /**
- * Writes the specified message in the following format to VFS\_FD\_DBG
- *      [lvl][module]: msg
+ * Writes the message formatted to VFS\_FD\_DBG
  */
 void logf(const char *file, int line, int level, const char *fmt, ...);
+
+/**
+* Writes the message formatted to VFS\_FD\_STDOUT (printf)
+*/
+void log_printf(int level, const char *fmt, ...);
 
 #define log_debug(fmt, ...) logf(__FILE__,  __LINE__, LVL_DEBUG, fmt, ##__VA_ARGS__)
 #define log_info(fmt, ...) logf(__FILE__, __LINE__, LVL_INFO, fmt, ##__VA_ARGS__)

@@ -25,14 +25,15 @@ void pit_initialize(void) {
 
     uint32_t hz = 1000;
     uint32_t divisor = PIT_FREQUENCY / hz;
+
+    irq_register_handler(IRQ0, pit_callback);
+
     outb(PIT_CMD, PIT_CMD_BINARY |
                   PIT_CMD_MODE_3 |
                   PIT_CMD_RW_BOTH |
                   PIT_CMD_COUNTER_0);
     outb(PIT_COUNTER_0, divisor);
     outb(PIT_COUNTER_0, divisor >> 8);
-
-    irq_register_handler(IRQ0, pit_callback);
 
     sti();
 }

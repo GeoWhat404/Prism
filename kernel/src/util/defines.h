@@ -1,15 +1,17 @@
 #pragma once
 
 #define ARCH x86_64
-#define OS_VERSION 0.0.1
+#define OS_VERSION 0.1.0
 
 #define STRINGIFY_DIR(x) #x
 #define STRINGIFY(x) STRINGIFY_DIR(x)
+#define TODO() do {                                 \
+        kwarn("TODO: \"%s\"", __PRETTY_FUNCTION__);   \
+    } while (0)
 
 #define _cdecl  __attribute__((cdecl))
 #define _unused __attribute__((unused))
 #define _packed __attribute__((packed))
-
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

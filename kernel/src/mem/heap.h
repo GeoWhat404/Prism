@@ -8,3 +8,6 @@ void heap_print(void);
 
 void *kmalloc(size_t size);
 void kfree(void *ptr);
+
+// non standard helping functions i guess
+void kmalloc_null_error();

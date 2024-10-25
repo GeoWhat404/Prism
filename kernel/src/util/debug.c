@@ -28,6 +28,18 @@ void debugf(const char *fmt, ...) {
     va_end(args);
 }
 
+void log_printf(int lvl, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    printf("%s", log_severity_colors[lvl]);
+    printf("[%s] " WHT, log_severity_names[lvl]);
+    vfprintf(VFS_FD_STDOUT, fmt, args);
+    printf("\n" RES);
+
+    va_end(args);
+}
+
 void logf(const char *file, int line, int level, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -36,17 +48,16 @@ void logf(const char *file, int line, int level, const char *fmt, ...) {
         return;
 
     // change color to the one associateed with the severity of the log
-    fputs(log_severity_colors[level], VFS_FD_DEBUG);
+    fprintf(VFS_FD_DEBUG, "%s", log_severity_colors[level]);
 
-    // print the severity and module
-    fprintf(VFS_FD_DEBUG, "[%s] " RES, log_severity_names[level], file, line);
+    fprintf(VFS_FD_DEBUG, "[%s] " RES, log_severity_names[level]);
     fprintf(VFS_FD_DEBUG, B_WHT "%s line: %d: " WHT, file, line);
 
     // print the message
     vfprintf(VFS_FD_DEBUG, fmt, args);
 
     // reset the color
-    fprintf(VFS_FD_DEBUG, "%s\n", color_reset);
+    fprintf(VFS_FD_DEBUG, RES "\n");
 
     va_end(args);
 }

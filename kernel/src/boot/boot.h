@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <boot/limine.h>
 
 typedef struct {
@@ -11,6 +12,9 @@ typedef struct {
 
     uint64_t kernel_virt_base;
     uint64_t kernel_phys_base;
+    uint32_t cpu_count;
+
+    bool heap;
 } boot_info_t;
 
 boot_info_t boot_info;

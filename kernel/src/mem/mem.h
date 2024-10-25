@@ -17,6 +17,7 @@ typedef struct {
 
 void mem_init(void);
 void mem_print_layout(void);
+uint64_t mem_get_size(void);
 
 static inline virt_addr_t mem_phys_to_virt(const phys_addr_t phys) {
     return (virt_addr_t)(phys + boot_info.lhhdmr->offset);

@@ -14,7 +14,7 @@ struct __fb_ctx {
 };
 
 static struct __fb_ctx fb;
-static int rdy = 0;
+static uint32_t default_color32 = COLOR(COLOR_WHITE);
 
 void fb_init(graphics_ctx_t *graphics_ctx, int rows, int cols) {
 	fb.cursor_x = 0;
@@ -41,8 +41,9 @@ void fb_putc(char c) {
 	case '\n':
 		fb.cursor_x = 0;
 		fb.cursor_y++;
-        graphics_swap_buffer(fb.graphics_ctx);
+
 		break;
+
 	case '\r':
 		fb.cursor_y++;
 		break;
@@ -51,7 +52,6 @@ void fb_putc(char c) {
 				  fb.cursor_y * graphics_get_font_height(), c);
 
 		fb.cursor_x++;
-
 		break;
 	}
 
@@ -75,38 +75,39 @@ void fb_putc(char c) {
 void fb_puts(const char *str) {
 	for (int i = 0; str[i] != '\0'; i++) {
 		if (str[i] == '\e') {
-			if (memcmp(str + i, BLK, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0x000000);
+			if (memcmp(str + i, BLK, 7) == 0 || memcmp(str + i, B_BLK, 7) == 0) {
+				graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_WHITE));
 				i += 6;
-			} else if (memcmp(str + i, RED, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0xFF0000);
+			} else if (memcmp(str + i, RED, 7) == 0 || memcmp(str + i, B_RED, 7) == 0) {
+				graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_RED));
 				i += 6;
-			} else if (memcmp(str + i, GRN, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0x00FF00);
-				i += 6;
-			} else if (memcmp(str + i, YEL, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0xFFFF00);
-				i += 6;
-			} else if (memcmp(str + i, BLU, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0x0000FF);
-				i += 6;
-			} else if (memcmp(str + i, MAG, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0xFF00FF);
-				i += 6;
-			} else if (memcmp(str + i, CYN, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0x00FFFF);
-				i += 6;
-			} else if (memcmp(str + i, WHT, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, 0xFFFFFF);
-				i += 6;
-			}
-
+			} else if (memcmp(str + i, GRN, 7) == 0 || memcmp(str + i, B_GRN, 7) == 0) {
+				graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_GREEN));
+                i += 6;
+            } else if (memcmp(str + i, YEL, 7) == 0 || memcmp(str + i, B_YEL, 7) == 0) {
+                graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_YELLOW));
+                i += 6;
+            } else if (memcmp(str + i, BLU, 7) == 0 || memcmp(str + i, B_BLU, 7) == 0) {
+                graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_BLUE));
+                i += 6;
+            } else if (memcmp(str + i, MAG, 7) == 0 || memcmp(str + i, B_MAG, 7) == 0) {
+                graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_MAGENTA));
+                i += 6;
+            } else if (memcmp(str + i, CYN, 7) == 0 || memcmp(str + i, B_CYN, 7) == 0) {
+                graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_CYAN));
+                i += 6;
+            } else if (memcmp(str + i, WHT, 7) == 0 || memcmp(str + i, B_WHT, 7) == 0) {
+                graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_WHITE));
+                i += 6;
+            } else if (memcmp(str + i, RES, 4) == 0){
+                graphics_set_stroke(fb.graphics_ctx, default_color32);
+                i += 3;
+            }
 			continue;
 		}
-
 		fb_putc(str[i]);
 	}
 
-	graphics_set_stroke(fb.graphics_ctx, 0xFFFFFF);
+//	graphics_set_stroke(fb.graphics_ctx, default_color32);
 	graphics_swap_buffer(fb.graphics_ctx);
 }
