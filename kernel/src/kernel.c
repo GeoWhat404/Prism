@@ -88,23 +88,6 @@ void kmain(void) {
 
     print_info();
 
-    log_info(B_BLK "B_BLK");
-    log_info(B_RED "B_RED");
-    log_info(B_GRN "B_GRN");
-    log_info(B_YEL "B_YEL");
-    log_info(B_BLU "B_BLU");
-    log_info(B_MAG "B_MAG");
-    log_info(B_CYN "B_CYN");
-    log_info(B_WHT "B_WHT");
-    log_info(BLK "BLK");
-    log_info(WHT "WHT");
-    log_info(RED "RED");
-    log_info(GRN "GRN");
-    log_info(YEL "YEL");
-    log_info(BLU "BLU");
-    log_info(MAG "MAG");
-    log_info(CYN "CYN");
-
     while (1) {
         hlt();
     }

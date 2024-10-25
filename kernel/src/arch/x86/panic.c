@@ -64,17 +64,14 @@ char *get_function_name(uint64_t addr) {
 }
 
 void print_panic_msg(void) {
-    fprintf(VFS_FD_STDERR, "--- < kernel panic > ---");
-    fprintf(VFS_FD_STDERR,
-            "\nno need to panic though :)\n"
-            "reason: ");
+    kerror("--- < kernel panic > ---");
+    kerror("There is no need for YOU to panic");
 }
 
 void print_panic_reason(const char *fmt, va_list ap) {
-    vfprintf(VFS_FD_STDERR, fmt, ap);
-    fprintf(VFS_FD_STDERR, "\n");
-
-    log_error("Unformatted panic message: %s", fmt);
+    char buffer[200];
+    vsnprintf(buffer, 200, fmt, ap);
+    kerror("reason: %s", buffer, ap);
 }
 
 void panic(const char *fmt, ...) {
@@ -98,7 +95,7 @@ void stack_trace(int depth, uint64_t rbp, uint64_t rip) {
         kerror("0x%016llx \t%s", stack->rip, (stack->rip ? get_function_name(stack->rip) : "N/A"));
         stack = stack->rbp;
     } while (stack && --depth && stack->rip);
-    printf(" | This is a very sad moment :(\n");
+    kerror(" | This is a very sad moment :(\n");
 }
 
 void dump_regs(registers_t *regs) {

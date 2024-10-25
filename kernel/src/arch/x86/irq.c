@@ -42,7 +42,6 @@ void irq_initialize(void) {
     for (int i = 0; i < 16; i++)
         isr_register_handler(i + PIC_REMAP_OFFSET, irq_handle_interrupt);
 
-    i8259_unmask(IRQ0);
     i8259_unmask(IRQ1);
     i8259_unmask(IRQ2);
     i8259_unmask(IRQ8);

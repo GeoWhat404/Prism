@@ -1,5 +1,6 @@
 #include "pit.h"
 #include "irq.h"
+#include "i8259.h"
 #include "port.h"
 #include "instr.h"
 
@@ -27,6 +28,7 @@ void pit_initialize(void) {
     uint32_t divisor = PIT_FREQUENCY / hz;
 
     irq_register_handler(IRQ0, pit_callback);
+    i8259_unmask(IRQ0);
 
     outb(PIT_CMD, PIT_CMD_BINARY |
                   PIT_CMD_MODE_3 |

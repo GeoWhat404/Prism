@@ -6,6 +6,7 @@
 #include <string.h>
 #include <hal/panic.h>
 #include <util/logger.h>
+#include <util/colors.h>
 #include <graphics/graphics.h>
 
 static inline uint64_t color32_to_color64(uint32_t clr) {
@@ -72,8 +73,8 @@ graphics_ctx_t *graphics_get_ctx(enum graphics_buffer_count buffer_count,
     graphics_set_origin(ctx, 0, 0);
     graphics_rect(ctx, 0, 0, 0, 0);
     graphics_move_to(ctx, 0, 0);
-    graphics_set_fill(ctx, 0x00000000);
-    graphics_set_stroke(ctx, 0x00FFFFFF);
+    graphics_set_fill(ctx, COLOR_BLACK);
+    graphics_set_stroke(ctx, COLOR_WHITE);
     graphics_set_line_width(ctx, 4);
 
     if (buffer_count == DOUBLE) {
@@ -316,7 +317,7 @@ void graphics_fill_rect(graphics_ctx_t *ctx, int x, int y, int w, int h) {
 
 void graphics_clear_rect(graphics_ctx_t *ctx, int x, int y, int w, int h) {
     uint32_t color = ctx->fill_32;
-    graphics_set_fill(ctx, 0x00000000);
+    graphics_set_fill(ctx, COLOR_BLACK);
     graphics_fill_rect(ctx, x - ctx->origin_x, y - ctx->origin_y, w, h);
     graphics_set_fill(ctx, color);
 }
@@ -368,7 +369,7 @@ void graphics_scroll(graphics_ctx_t *ctx, uint32_t pixels) {
             "D"(dst_ptr), "c"(size / 8));
 
         asm volatile("rep stos" ::"D"(ctx->buffer + size),
-            "c"(pixels * ctx->ctx_width), "a"((uint32_t)0));
+            "c"(pixels * ctx->ctx_width), "a"((uint32_t)COLOR_BLACK));
     } else {
         panic("Not yet implemented!");
     }
