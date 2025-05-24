@@ -1,7 +1,7 @@
 #include "panic.h"
 #include "instr.h"
 
-#include <drivers/fb.h>
+#include <drivers/fb/fb.h>
 
 #include <stdio.h>
 #include <string.h>

@@ -1,4 +1,0 @@
-CompileFlags:
-  Add:
-    - -I/home/geowhat/Projects/OSs/Prism/kernel/src/
-    - -I/home/geowhat/Projects/OSs/Prism/kernel/src/klibc/

@@ -1,6 +1,5 @@
 #include "vfs.h"
-#include "e9.h"
-#include <drivers/fb.h>
+#include <drivers/fb/fb.h>
 #include <graphics/graphics.h>
 #include <util/logger.h>
 

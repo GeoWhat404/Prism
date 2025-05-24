@@ -1,7 +1,7 @@
-#include "fb.h"
 #include <string.h>
 #include <util/colors.h>
 #include <util/logger.h>
+#include <drivers/fb/fb.h>
 #include <graphics/graphics.h>
 
 struct __fb_ctx {

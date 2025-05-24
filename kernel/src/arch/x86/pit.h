@@ -27,7 +27,7 @@
 #define PIT_CMD_COUNTER_1   0x40
 #define PIT_CMD_COUNTER_2   0x80
 #define PIT_CMD_READBACK    0xC0
-#define PIT_FREQUENCY       1193182
+#define PIT_FREQUENCY       1
 
 typedef void (*pfn_pit_callback)(uint32_t ticks);
 

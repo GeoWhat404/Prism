@@ -21,8 +21,7 @@
 #include <boot/boot.h>
 #include <boot/limine.h>
 
-
-#include <drivers/fb.h>
+#include <drivers/fb/fb.h>
 #include <graphics/graphics.h>
 #include <graphics/font/font.h>
 
@@ -67,9 +66,6 @@ void print_info(void) {
 void kmain(void) {
     init_systems();
 
-    // NOTE: for whatever reason when i call this code from a seperate function
-    // the _psf2_putc function pointer gets messed up.
-    // so maybe fix this soontm?
     struct font font;
 
     if (psf2_load_font(&font) != 0)
