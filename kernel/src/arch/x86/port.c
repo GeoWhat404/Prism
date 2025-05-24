@@ -10,6 +10,6 @@ uint8_t inb(uint16_t port) {
     return rv;
 }
 
-void io_wait(void) {
+void io_wait() {
     outb(UNUSED_PORT, 0x00);
 }

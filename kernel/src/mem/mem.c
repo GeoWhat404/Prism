@@ -24,7 +24,7 @@ static const char *mem_region_names[] = {
     [LIMINE_MEMMAP_FRAMEBUFFER]             = "Framebuffer"
 };
 
-void mem_print_layout(void) {
+void mem_print_layout() {
     size_t total = 0;
     size_t usable = 0;
 
@@ -47,7 +47,7 @@ void mem_print_layout(void) {
     kinfo("MEM: Total usable memory: %llu", usable);
 }
 
-void mem_init(void) {
+void mem_init() {
     mem_bitmap_t bitmap = pmm_initialize();
 
     vmm_init(bitmap);

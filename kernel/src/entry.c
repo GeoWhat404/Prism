@@ -63,11 +63,11 @@ static volatile struct limine_smp_request smp_request = {
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
-static void hcf(void) {
+static void hcf() {
     panic("halt catch fire");
 }
 
-void _start(void) {
+void _start() {
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
     }

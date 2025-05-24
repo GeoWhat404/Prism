@@ -25,7 +25,7 @@ static void kbd_callback(registers_t *regs) {
     inb(0x60);
 }
 
-void irq_initialize(void) {
+void irq_initialize() {
     i8259_remap(PIC_REMAP_OFFSET);
 
     i8259_mask_all();

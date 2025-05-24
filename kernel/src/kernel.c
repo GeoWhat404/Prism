@@ -1,3 +1,5 @@
+#include "kernel.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -22,29 +24,42 @@
 #include <boot/limine.h>
 
 #include <drivers/fb/fb.h>
+#include <drivers/ps2/keyboard.h>
 #include <graphics/graphics.h>
+#include <graphics/gfx.h>
 #include <graphics/font/font.h>
 
 #include <util/colors.h>
 
-static graphics_ctx_t *g_ctx;
+#include <shell.h>
 
-void init_mmu(void) {
+void init_mmu() {
     mem_init();
     kinfo("MMU Components Initialized");
 }
 
-void init_systems(void) {
+void init_systems() {
     enable_sse2();
     init_mmu();
 }
 
-void print_mem(void) {
+bool init_keyboard() {
+    // for now just do the ps2 for emulator debugging
+
+    bool ps2 = ps2_keyboard_initialize();
+    if (ps2) {
+        ps2_keyboard_enable();
+    }
+
+    return ps2;
+}
+
+void print_mem() {
     mem_print_layout();
     heap_print();
 }
 
-void print_info(void) {
+void print_info() {
     kinfo("Prism v%s on %s (compilation: %s)", STRINGIFY(OS_VERSION), STRINGIFY(ARCH), __DATE__);
 
     hal_initialize();
@@ -63,10 +78,8 @@ void print_info(void) {
     kinfo("Initial setup complete in %llus", pit_get_seconds());
 }
 
-void kmain(void) {
+void kmain() {
     init_systems();
-
-    struct font font;
 
     if (psf2_load_font(&font) != 0)
         panic("failed to load psf2 font");
@@ -83,6 +96,15 @@ void kmain(void) {
             graphics_get_ctx_width(g_ctx) / graphics_get_font_width());
 
     print_info();
+
+    if (!init_keyboard())
+        kerror("System will continue without a keyboard!");
+
+    kinfo("Launching basic shell");
+
+    shell_launch();
+
+    kinfo("Shell returned");
 
     while (1) {
         hlt();

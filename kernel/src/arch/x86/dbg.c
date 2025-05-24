@@ -5,11 +5,11 @@
 void handle_tssrsp(uint64_t rsp) {
 }
 
-void syscall_handler(void) {
+void syscall_handler() {
 }
 
-void handle_syscall_tssrsp(void) {
+void handle_syscall_tssrsp() {
 }
 
-void task_kill_cleanup(void) {
+void task_kill_cleanup() {
 }

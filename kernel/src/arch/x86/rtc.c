@@ -27,7 +27,7 @@ static void populate_datetime(datetime_t *out) {
     out->years      = rtc_get_register(0x09);
 }
 
-static void calculate_time(void) {
+static void calculate_time() {
     uint8_t reg_b_val = 0;
     datetime_t new, old;
 
@@ -81,7 +81,7 @@ static void rtc_callback(registers_t *regs) {
     __asm__ volatile("sti");
 }
 
-void rtc_initialize(void) {
+void rtc_initialize() {
     uint8_t prev_reg_b_val = rtc_get_register(0x0B);
 
     // select register B

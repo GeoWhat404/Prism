@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-static inline uint64_t read_cr0(void) {
+static inline uint64_t read_cr0() {
     uint64_t val;
     __asm__ volatile("mov %%cr0, %0" : "=r"(val));
     return val;
@@ -12,7 +12,7 @@ static inline void write_cr0(uint64_t cr2) {
     __asm__ volatile("movq %[cr0_val], %%cr0" ::[cr0_val] "r"(cr2));
 }
 
-static inline uint64_t read_cr2(void) {
+static inline uint64_t read_cr2() {
     uint64_t val;
     __asm__ volatile("mov %%cr2, %0" : "=r"(val));
     return val;
@@ -22,7 +22,7 @@ static inline void write_cr2(uint64_t cr2) {
     __asm__ volatile("movq %[cr2_val], %%cr2" ::[cr2_val] "r"(cr2));
 }
 
-static inline uint64_t read_cr3(void) {
+static inline uint64_t read_cr3() {
     uint64_t val;
     __asm__ volatile("mov %%cr3, %0" : "=r"(val));
     return val;
@@ -32,7 +32,7 @@ static inline void write_cr3(uint64_t cr3) {
     __asm__ volatile("movq %[cr3_val], %%cr3" ::[cr3_val] "r"(cr3));
 }
 
-static inline uint64_t read_cr4(void) {
+static inline uint64_t read_cr4() {
     uint64_t val;
     __asm__ volatile("mov %%cr4, %0" : "=r"(val));
     return val;

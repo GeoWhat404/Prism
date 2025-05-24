@@ -41,7 +41,7 @@ void i8259_remap(int offset) {
     i8259_set_mask(0xFFFF);
 }
 
-void i8259_disable(void) {
+void i8259_disable() {
     outb(PIC1_DATA_PORT, 0xFF);
     outb(PIC2_DATA_PORT, 0xFF);
 }
@@ -57,7 +57,7 @@ void i8259_set_mask(uint16_t new_mask) {
     outb(PIC2_DATA_PORT, new_mask >> 8);
 }
 
-uint16_t i8259_get_mask(void) {
+uint16_t i8259_get_mask() {
     return inb(PIC1_DATA_PORT) | (inb(PIC2_DATA_PORT) << 8);
 }
 
@@ -89,12 +89,12 @@ void i8259_unmask(int irq) {
     outb(port, val);
 }
 
-void i8259_mask_all(void) {
+void i8259_mask_all() {
     for (int i = 0; i < 15; i++)
         i8259_mask(i);
 }
 
-void i8259_unmask_all(void) {
+void i8259_unmask_all() {
     for (int i = 0; i < 15; i++)
         i8259_unmask(i);
 }

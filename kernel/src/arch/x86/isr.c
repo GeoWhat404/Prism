@@ -46,7 +46,7 @@ char *exceptions[] = {
     "Reserved",
     "Reserved"};
 
-void isr_initialize(void) {
+void isr_initialize() {
     // ISR exceptions 0 - 31
     for (int i = 0; i < 48; i++) {
         idt_set_gate(i, (uint64_t)isr_stub_table[i], IDT_DESCRIPTOR_EXCEPTION);

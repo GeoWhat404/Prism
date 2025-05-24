@@ -9,7 +9,7 @@
 
 #include <util/logger.h>
 
-void hal_initialize(void) {
+void hal_initialize() {
     gdt_initialize();
     kinfo("GDT Initialized");
 

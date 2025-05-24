@@ -26,7 +26,7 @@ void fb_init(graphics_ctx_t *graphics_ctx, int rows, int cols) {
     fb.graphics_ctx = graphics_ctx;
 }
 
-bool fb_ready(void) { return fb.row_size ? true : false; }
+bool fb_ready() { return fb.row_size ? true : false; }
 
 void fb_putc(char c) {
 	switch (c) {
@@ -108,6 +108,10 @@ void fb_puts(const char *str) {
 		fb_putc(str[i]);
 	}
 
-//	graphics_set_stroke(fb.graphics_ctx, default_color32);
 	graphics_swap_buffer(fb.graphics_ctx);
+}
+
+void fb_reset() {
+    fb.cursor_x = 0;
+    fb.cursor_y = 0;
 }

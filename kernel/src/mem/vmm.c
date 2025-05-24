@@ -77,7 +77,7 @@ static page_table_t *vmm_get_table_from_entry(union page_entry *entry) {
     return (page_table_t *)virt;
 }
 
-static page_table_t *vmm_get_new_page_table(void) {
+static page_table_t *vmm_get_new_page_table() {
     uint64_t idx = vmm_ctx.pt_pool_next_idx++ % PT_POOL_SIZE;
 
     virt_addr_t virt = vmm_ctx.pt_pool[idx];
@@ -86,7 +86,7 @@ static page_table_t *vmm_get_new_page_table(void) {
     return (page_table_t *)virt;
 }
 
-static void vmm_try_restock_pt_pool(void) {
+static void vmm_try_restock_pt_pool() {
     if (!vmm_ctx.pt_pool_ready)
         return;
 
@@ -189,7 +189,7 @@ bool vmm_map(phys_addr_t phys, virt_addr_t virt, size_t bytes, uint32_t flags) {
     return true;
 }
 
-void vmm_print_memmap(void) {
+void vmm_print_memmap() {
     uint64_t entry_addr_mask =
     	(0xffffffffffffffff >> (64 - vmm_ctx.phys_addr_size))
         & 0xfffffffffffff000;
@@ -248,7 +248,7 @@ void vmm_print_memmap(void) {
     }
 }
 
-static lm_size_id_t vmm_get_lmsi(void) {
+static lm_size_id_t vmm_get_lmsi() {
     uint32_t function = 0x80000008;
     uint32_t eax;
     __asm__ volatile(

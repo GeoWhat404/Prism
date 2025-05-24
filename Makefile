@@ -3,7 +3,10 @@ override MAKEFLAGS += -rR
 
 override IMAGE_NAME := prism
 
-QEMU_FLAGS= -rtc base=localtime -device VGA,edid=on,xres=1920,yres=1080 -m 1G
+QEMU_FLAGS= -rtc base=localtime \
+			-device VGA,edid=on,xres=1920,yres=1080  \
+			-machine type=pc \
+			-m 1G
 # QEMU_FLAGS= -rtc base=localtime
 
 .PHONY: all

@@ -77,7 +77,7 @@ static void expand_heap(size_t minimum_expansion_size) {
 	}
 }
 
-void heap_print(void) {
+void heap_print() {
     heap_blk_t *ptr = root_blk;
     kinfo("Heap: Dumping the heap");
     do {

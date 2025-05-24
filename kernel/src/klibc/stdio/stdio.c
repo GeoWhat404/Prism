@@ -288,3 +288,7 @@ void printf(const char *fmt, ...) {
     vfprintf(VFS_FD_STDOUT, fmt, args);
     va_end(args);
 }
+
+void putc(char c) {
+    vfs_write(VFS_FD_STDOUT, &c, 1);
+}

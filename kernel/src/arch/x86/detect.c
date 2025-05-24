@@ -63,7 +63,7 @@ char *intel_other[] = {
 	"Reserved"
 };
 
-int detect_cpu(void) {
+int detect_cpu() {
     uint32_t ebx, unused;
 
     cpuid(0, unused, ebx, unused, unused);
@@ -157,7 +157,7 @@ char *intel_get_model(int family, int model) {
     return "???";
 }
 
-int handle_intel(void) {
+int handle_intel() {
     kinfo("Intel specific features:");
     uint32_t eax, ebx, ecx, edx, max_eax, sig, unused;
     int model, family, type, brand, stepping, reserved;
@@ -214,7 +214,7 @@ int handle_intel(void) {
     return 0;
 }
 
-int handle_amd(void) {
+int handle_amd() {
     kinfo("AMD Specific Features:");
     uint32_t extended, eax, ebx, ecx, edx, unused;
     int family, model, stepping, reserved;

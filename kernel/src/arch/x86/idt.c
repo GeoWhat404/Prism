@@ -25,7 +25,7 @@ typedef struct {
 idt_entry_t idt[IDT_ENTRIES];
 extern uint64_t _isr1;
 
-void idt_load(void) {
+void idt_load() {
     idt_descriptor_t idt_desc;
     idt_desc.base = (size_t)&idt;
     idt_desc.limit = IDT_ENTRIES * sizeof(idt_entry_t) - 1;
@@ -46,7 +46,7 @@ void idt_set_gate(int interrupt, uint64_t handler, uint8_t flags) {
     idt[interrupt].reserved = 0;
 }
 
-void idt_initialize(void) {
+void idt_initialize() {
     idt_load();
 }
 

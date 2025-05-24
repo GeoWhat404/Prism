@@ -95,7 +95,7 @@ static uintptr_t pmm_find_pages(size_t needed, uintptr_t start, uintptr_t end) {
     return INVALID_PHYS;
 }
 
-size_t pmm_total_memory(void) {
+size_t pmm_total_memory() {
     size_t total = 0;
 
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++)
@@ -170,7 +170,7 @@ bool pmm_dealloc_mem(const phys_addr_t phys, const size_t bytes) {
     return pmm_free_mem(phys, bytes);
 }
 
-mem_bitmap_t pmm_initialize(void) {
+mem_bitmap_t pmm_initialize() {
 
     uint64_t begin = pit_get_seconds();
 

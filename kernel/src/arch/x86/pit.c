@@ -20,7 +20,7 @@ static void pit_callback(registers_t *regs) {
     }
 }
 
-void pit_initialize(void) {
+void pit_initialize() {
 
     cli();
 
@@ -40,19 +40,19 @@ void pit_initialize(void) {
     sti();
 }
 
-void pit_reset(void) {
+void pit_reset() {
     ticks = 0;
 }
 
-void pit_freeze(void) {
+void pit_freeze() {
     running = false;
 }
 
-void pit_unfreeze(void) {
+void pit_unfreeze() {
     running = true;
 }
 
-bool pit_is_frozen(void) {
+bool pit_is_frozen() {
     return running;
 }
 
@@ -65,12 +65,16 @@ void pit_set_freq(uint32_t new_freq) {
     sti();
 }
 
-uint64_t pit_get_ticks(void) {
+uint64_t pit_get_ticks() {
     return ticks;
 }
 
-uint64_t pit_get_seconds(void) {
-    return (uint64_t) (ticks / (PIT_FREQUENCY / 1000));
+uint64_t pit_get_seconds() {
+    uint32_t divisor = PIT_FREQUENCY / 1000;
+
+    if (divisor != 0)
+        return (uint64_t) (ticks / divisor);
+    return ticks;
 }
 
 void pit_register_callback(pfn_pit_callback callback) {
