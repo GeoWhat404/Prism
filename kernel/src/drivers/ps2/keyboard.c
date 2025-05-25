@@ -1,10 +1,8 @@
 #include "keyboard.h"
-#include "hal/vfs.h"
 
 #include <hal/irq.h>
 #include <hal/port.h>
 
-#include <stdio.h>
 #include <stdbool.h>
 
 #include <util/logger.h>
@@ -14,13 +12,13 @@ static bool caps_lock;
 static bool shift_pressed;
 static pfn_keyboard_callback callback;
 
-#define WAIT() {                                                           \
-    uint32_t i;                                                            \
-    for(i = 0; (i < 1024) && !is_response_ok(); i++) {                     \
-        io_wait();                                                         \
-    }                                                                      \
-    if(i == 1023)                                                          \
-        kerror("Wait: timed out");                              \
+#define WAIT() {                                                            \
+    uint32_t i;                                                             \
+    for(i = 0; (i < 1024) && !is_response_ok(); i++) {                      \
+        io_wait();                                                          \
+    }                                                                       \
+    if(i == 1023)                                                           \
+        kerror("Wait: timed out");                                          \
 }
 
 static const char scan_code_chars[128] = {
@@ -50,6 +48,12 @@ static bool is_response_ok() {
     uint8_t status = inb(KBD_STATUS_REG);
     uint8_t ok = status & 1;
     return ok != status;
+}
+
+static void flush_output_buffer() {
+    while (inb(KBD_STATUS_REG) & 1) {
+        inb(KBD_DATA_PORT);
+    }
 }
 
 static bool test_ps2_first_port() {
@@ -83,14 +87,19 @@ static bool test_ps2_first_port() {
     }
 }
 
-static void enable_first_ps2_port() {
-    outb(KBD_CMD_REG, 0xAE);
-    io_wait();
-}
-
 bool ps2_keyboard_initialize() {
     enabled = true;
     irq_register_handler(IRQ1, ps2_keyboard_callback);
+
+    // disable port 1 & 2 (if exists) to block random
+    // junk being sent while testing
+    outb(KBD_CMD_REG, KBD_CMD_DISABLE_PORT_1);
+    outb(KBD_CMD_REG, KBD_CMD_DISABLE_PORT_2);
+
+    io_wait();
+
+    // flush out random input garbage
+    flush_output_buffer();
 
     /* Test PS/2 Controller */
     outb(KBD_CMD_REG, 0xAA);
@@ -102,8 +111,11 @@ bool ps2_keyboard_initialize() {
         return false;
     }
 
-    /* Enable first PS/2 port */
-    enable_first_ps2_port();
+    // re-enable port 1 & 2 (if exists)
+    outb(KBD_CMD_REG, KBD_CMD_ENABLE_PORT_1);
+    outb(KBD_CMD_REG, KBD_CMD_ENABLE_PORT_2);
+    io_wait();
+    
     kinfo("PS/2 Keyboard 1 has been initialized");
 
     /* Test first PS/2 port */
@@ -185,6 +197,7 @@ char ps2_keyboard_default_proc(int scancode) {
     char ch = 0;
 
     if (scancode & 0x80) {
+        // unmask
         scancode &= ~0x80;
 
         switch (scancode) {

@@ -12,7 +12,6 @@ struct _source_location {
 
 #define CUR_SOURCE_LOCATION (struct _source_location){__FILE__, __LINE__, __func__}
 
-
 void do_assert(bool expr, const struct _source_location loc, const char *expression);
 
 #define assert(Expr) do_assert(Expr, CUR_SOURCE_LOCATION, #Expr)

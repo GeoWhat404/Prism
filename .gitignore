@@ -4,7 +4,6 @@ ovmf/
 kernel/bin/
 kernel/obj/
 
-*.py
 *.iso
 *.o
 *.efi

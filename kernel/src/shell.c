@@ -1,5 +1,7 @@
 #include "shell.h"
+#include "graphics/graphics.h"
 #include "kernel.h"
+#include "util/debug.h"
 
 #include <mem/mem.h>
 #include <mem/heap.h>
@@ -32,11 +34,79 @@
 #define CMD_MALLOC_TEST "malloc_test"
 #define CMD_HELP "help"
 #define CMD_PANIC "panic"
+#define CMD_GFX_INFO "gfxinfo"
 
 static const char *shell_prompt = "[prism] ";
 static bool shell_running = true;
 static char *command_buffer;
 static int command_buffer_count = 0;
+
+static const char *get_buffer_count_str(enum graphics_buffer_count count) {
+    switch (count) {
+        case SINGLE: return "SINGLE";
+        case DOUBLE: return "DOUBLE";
+        case TRIPLE: return "TRIPLE";
+        default: return "UNKNOWN";
+    }
+}
+
+static const char *get_active_buffer_str(enum __graphics_active_buffer buf) {
+    switch (buf) {
+        case FRAMEBUFFER: return "FRAMEBUFFER";
+        case BUFFER0: return "BUFFER0";
+        case BUFFER1: return "BUFFER1";
+        default: return "UNKNOWN";
+    }
+}
+
+static const char *get_drawing_mode_str(enum __graphics_drawing_mode mode) {
+    switch (mode) {
+        case NONE: return "NONE";
+        case RECT: return "RECT";
+        case ELLIPSE: return "ELLIPSE";
+        case TEXT: return "TEXT";
+        case LINE: return "LINE";
+        default: return "UNKNOWN";
+    }
+}
+
+static void print_graphics_context() {
+    printf(B_GRN"Graphics Context:\n"RES);
+    printf(B_GRN"  x_offset:             "B_BLU"%d\n"RES, g_ctx->x_offset);
+    printf(B_GRN"  y_offset:             "B_BLU"%d\n"RES, g_ctx->y_offset);
+    printf(B_GRN"  ctx_width:            "B_BLU"%d\n"RES, g_ctx->ctx_width);
+    printf(B_GRN"  ctx_height:           "B_BLU"%d\n"RES, g_ctx->ctx_height);
+    printf(B_GRN"  pitch:                "B_BLU"%u\n"RES, g_ctx->pitch);
+    
+    printf(B_GRN"  buffer_count:         "B_YEL"%s\n"RES, get_buffer_count_str(g_ctx->buffer_count));
+    
+    printf(B_GRN"  buffer_size:          "B_BLU"%zu bytes\n"RES, g_ctx->buffer_size);
+    printf(B_GRN"  buffer:               "B_GRN"%p\n"RES, g_ctx->buffer);
+    printf(B_GRN"  buffer0:              "B_GRN"%p\n"RES, g_ctx->buffer0);
+    printf(B_GRN"  buffer1:              "B_GRN"%p\n"RES, g_ctx->buffer1);
+
+    printf(B_GRN"  current_back_buffer:  "B_YEL"%s\n"RES, get_active_buffer_str(g_ctx->current_back_buffer));
+
+    printf(B_GRN"  origin_x:             "B_BLU"%d\n"RES, g_ctx->origin_x);
+    printf(B_GRN"  origin_y:             "B_BLU"%d\n"RES, g_ctx->origin_y);
+
+    printf(B_GRN"  x:                    "B_BLU"%d\n"RES, g_ctx->x);
+    printf(B_GRN"  y:                    "B_BLU"%d\n"RES, g_ctx->y);
+    printf(B_GRN"  w:                    "B_BLU"%d\n"RES, g_ctx->w);
+    printf(B_GRN"  h:                    "B_BLU"%d\n"RES, g_ctx->h);
+
+    printf(B_GRN"  line_x:               "B_BLU"%d\n"RES, g_ctx->line_x);
+    printf(B_GRN"  line_y:               "B_BLU"%d\n"RES, g_ctx->line_y);
+    printf(B_GRN"  line_width:           "B_BLU"%d\n"RES, g_ctx->line_width);
+
+    printf(B_GRN"  stroke_64:            "B_GRN"0x%016llx\n"RES, (unsigned long long)g_ctx->stroke_64);
+    printf(B_GRN"  stroke_32:            "B_GRN"0x%08x\n"RES, g_ctx->stroke_32);
+
+    printf(B_GRN"  fill_64:              "B_GRN"0x%016llx\n"RES, (unsigned long long)g_ctx->fill_64);
+    printf(B_GRN"  fill_32:              "B_GRN"0x%08x\n"RES, g_ctx->fill_32);
+
+    printf(B_GRN"  mode:                 "B_YEL"%s\n"RES, get_drawing_mode_str(g_ctx->mode));
+}
 
 static char **str_split(char* a_str, const char a_delim) {
     char **result    = 0;
@@ -82,6 +152,10 @@ static char **str_split(char* a_str, const char a_delim) {
 
 static int sstrlen(char **sstr) {
     int i = 0;
+
+    if (!sstr)
+        return 0;
+
     while (sstr[i++]);
 
     return i - 1;
@@ -100,6 +174,7 @@ static void print_help() {
     printf(B_GRN "%s " WHT "-> shows CPU info\n", CMD_CPUDETECT);
     printf(B_GRN "%s " WHT "-> shows the ticks from the PIT\n", CMD_PIT_TIME);
     printf(B_GRN "%s " WHT "-> prints the memory layout\n", CMD_MEM);
+    printf(B_GRN "%s " WHT "-> prints the graphics info\n", CMD_GFX_INFO);
     printf(B_GRN "%s " WHT "-> tests kmalloc(...)\n", CMD_MALLOC_TEST);
 }
 
@@ -118,8 +193,6 @@ static void execute_command(char *buffer) {
 
     int token_count = sstrlen(tokens);
 
-    fprintf(VFS_FD_DEBUG, "token_count=%d\n", token_count);
-
     if (IS_COMMAND(tokens[0], CMD_HELP, token_count, 1)) {
         print_help();
     } else if (IS_COMMAND(tokens[0], CMD_HI, token_count, 1)) {
@@ -136,8 +209,8 @@ static void execute_command(char *buffer) {
         fb_reset();
         gfx_swap_buffer();
     } else if (IS_COMMAND(tokens[0], CMD_EXIT, token_count, 1)) {
-        printf("Exiting shell\n");
         shell_terminate();
+        goto end;
     } else if (IS_COMMAND(tokens[0], CMD_CPUDETECT, token_count, 1)) {
         detect_cpu();
     } else if (IS_COMMAND(tokens[0], CMD_PIT_TIME, token_count, 1)) {
@@ -164,6 +237,8 @@ static void execute_command(char *buffer) {
         }
     } else if (IS_COMMAND(tokens[0], CMD_PANIC, token_count, 2)) {
         panic("\"%s\"", tokens[1]);
+    } else if (IS_COMMAND(tokens[0], CMD_GFX_INFO, token_count, 1)) {
+        print_graphics_context();
     } else {
         if (token_count >= 1)
             printf("Unknown command: \"%s\"\n", tokens[0]);
@@ -173,10 +248,13 @@ end:
     if (shell_running)
         print_prompt();
 
-    for (int i = 0; *(tokens + i); i++) {
-        kfree(*(tokens + i));
+    if (tokens) {
+        for (int i = 0; i < sstrlen(tokens); i++) {
+            kfree(tokens[i]);
+        }
+
+        kfree(tokens);
     }
-    kfree(tokens);
 }
 
 static void keyboard_callback(int scancode) {
@@ -232,8 +310,9 @@ static void keyboard_callback(int scancode) {
 void shell_launch() {
     shell_running = true;
 
-    printf("PrismOS basic prompt. Type `help` to view commands, "
-           "<ESC> to exit\n");
+    kinfo("Launched basic shell");
+
+    printf(B_MAG "PrismOS basic prompt. Type `help` to view commands, <ESC> to exit\n");
     print_prompt();
 
     command_buffer = kmalloc(BUFFER_SIZE);

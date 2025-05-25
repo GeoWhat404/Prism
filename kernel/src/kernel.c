@@ -43,7 +43,7 @@ void init_systems() {
     init_mmu();
 }
 
-bool init_keyboard() {
+void init_keyboard() {
     // for now just do the ps2 for emulator debugging
 
     bool ps2 = ps2_keyboard_initialize();
@@ -51,7 +51,9 @@ bool init_keyboard() {
         ps2_keyboard_enable();
     }
 
-    return ps2;
+    if (!ps2) {
+        kerror("The system will continue without a keyboard!");
+    }
 }
 
 void print_mem() {
@@ -78,9 +80,7 @@ void print_info() {
     kinfo("Initial setup complete in %llus", pit_get_seconds());
 }
 
-void kmain() {
-    init_systems();
-
+void init_graphics() {
     if (psf2_load_font(&font) != 0)
         panic("failed to load psf2 font");
 
@@ -94,14 +94,13 @@ void kmain() {
         kmalloc_null_error();
     fb_init(g_ctx, graphics_get_ctx_height(g_ctx) / graphics_get_font_height(),
             graphics_get_ctx_width(g_ctx) / graphics_get_font_width());
+}
 
+void kmain() {
+    init_systems();
+    init_graphics();
     print_info();
-
-    if (!init_keyboard())
-        kerror("System will continue without a keyboard!");
-
-    kinfo("Launching basic shell");
-
+    init_keyboard();
     shell_launch();
 
     kinfo("Shell returned");

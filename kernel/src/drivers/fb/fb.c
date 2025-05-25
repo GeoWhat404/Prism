@@ -77,7 +77,7 @@ void fb_putc(char c) {
 		fb.cursor_y++;
 	}
 
-	if (fb.cursor_y > fb.row_size - 1) {
+	if (fb.cursor_y >= fb.row_size - 2) {
 		graphics_scroll(fb.graphics_ctx, graphics_get_font_height());
 
 		fb.cursor_y--;
@@ -89,7 +89,7 @@ void fb_puts(const char *str) {
 	for (int i = 0; str[i] != '\0'; i++) {
 		if (str[i] == '\e') {
 			if (memcmp(str + i, BLK, 7) == 0 || memcmp(str + i, B_BLK, 7) == 0) {
-				graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_WHITE));
+				graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_BLACK));
 				i += 6;
 			} else if (memcmp(str + i, RED, 7) == 0 || memcmp(str + i, B_RED, 7) == 0) {
 				graphics_set_stroke(fb.graphics_ctx, COLOR(COLOR_RED));

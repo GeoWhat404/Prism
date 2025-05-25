@@ -2,8 +2,8 @@
 #include "../graphics/graphics.h"
 #include <util/logger.h>
 
-extern char _terminus_font_header;
-extern char _terminus_font_glyph_table;
+extern char _font_header;
+extern char _font_glyph_table;
 
 #define PSF2_MAGIC0 0x72
 #define PSF2_MAGIC1 0xb5
@@ -28,9 +28,9 @@ static void _psf2_putc(graphics_ctx_t *ctx, int x, int y, char c, uint32_t strok
         c = 0;
     }
 
-    struct psf2_header *font_header = (struct psf2_header *)&_terminus_font_header;
+    struct psf2_header *font_header = (struct psf2_header *)&_font_header;
 
-    uint8_t *glyph = ((uint8_t *)&_terminus_font_glyph_table) + c * font_header->glyph_size;
+    uint8_t *glyph = ((uint8_t *)&_font_glyph_table) + c * font_header->glyph_size;
     uint8_t glyph_line_size = (uint8_t)(font_header->glyph_size / font_header->glyph_height);
 
     for (uint32_t cy = 0; cy < font_header->glyph_height; cy++) {
@@ -45,7 +45,7 @@ static void _psf2_putc(graphics_ctx_t *ctx, int x, int y, char c, uint32_t strok
 }
 
 int psf2_load_font(struct font *font) {
-    struct psf2_header *font_header = (struct psf2_header *)&_terminus_font_header;
+    struct psf2_header *font_header = (struct psf2_header *)&_font_header;
 
     if (PSF2_MAGIC_OK(font_header->magic)) {
         kwarn("Font magic is valid");
