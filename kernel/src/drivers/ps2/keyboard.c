@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "hal/vfs.h"
 
 #include <hal/irq.h>
 #include <hal/port.h>
@@ -32,10 +33,10 @@ static const char scan_code_chars[128] = {
     '+', 0,	   0,	 0,	  0,	0,	 0,	  0,   0,	0,	 0,	  0};
 
 static void ps2_keyboard_callback(_unused registers_t *unused) {
-    if(!enabled)
+    if (!enabled)
         return;
     uint8_t scancode = ps2_keyboard_read_scancode();
-    if(callback)
+    if (callback)
         callback(scancode);
 }
 
@@ -176,7 +177,7 @@ static char alternate_char(char ch) {
         case '`':
             return '~';
         default:
-            return ch;
+            return toupper(ch);
     }
 }
 
@@ -184,33 +185,44 @@ char ps2_keyboard_default_proc(int scancode) {
     char ch = 0;
 
     if (scancode & 0x80) {
-    } else {
+        scancode &= ~0x80;
+
         switch (scancode) {
-            case SCAN_CODE_KEY_CAPS_LOCK:
-                caps_lock = !caps_lock;
-                break;
-            case SCAN_CODE_KEY_ENTER:
-                ch = '\n';
-                break;
-            case SCAN_CODE_KEY_TAB:
-                ch = '\t';
-                break;
             case SCAN_CODE_KEY_LEFT_SHIFT:
-                shift_pressed = true;
+                shift_pressed = false;
                 break;
             default:
-                ch = scan_code_chars[scancode];
-                if(caps_lock) {
-                    ch = (shift_pressed) ? alternate_char(ch) : toupper(ch);
-                } else {
-                    if(shift_pressed) {
-                        ch = alternate_char(ch);
-                    } else {
-                        ch = scan_code_chars[scancode];
-                    }
-                }
                 break;
         }
+
+        return 0;
+    }
+
+    switch (scancode) {
+        case SCAN_CODE_KEY_CAPS_LOCK:
+            caps_lock = !caps_lock;
+            break;
+        case SCAN_CODE_KEY_ENTER:
+            ch = '\n';
+            break;
+        case SCAN_CODE_KEY_TAB:
+            ch = '\t';
+            break;
+        case SCAN_CODE_KEY_LEFT_SHIFT:
+            shift_pressed = true;
+            break;
+        default:
+            ch = scan_code_chars[scancode];
+            if (caps_lock) {
+                ch = (shift_pressed) ? alternate_char(ch) : toupper(ch);
+            } else {
+                if (shift_pressed) {
+                    ch = alternate_char(ch);
+                } else {
+                    ch = scan_code_chars[scancode];
+                }
+            }
+            break;
     }
     return ch;
 }

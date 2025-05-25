@@ -15,6 +15,7 @@ struct __fb_ctx {
 
 static struct __fb_ctx fb;
 static uint32_t default_color32 = COLOR(COLOR_WHITE);
+static bool enable_cursor = false;
 
 void fb_init(graphics_ctx_t *graphics_ctx, int rows, int cols) {
 	fb.cursor_x = 0;
@@ -28,7 +29,18 @@ void fb_init(graphics_ctx_t *graphics_ctx, int rows, int cols) {
 
 bool fb_ready() { return fb.row_size ? true : false; }
 
+static void draw_cursor(bool draw) {
+
+    if (!enable_cursor)
+        draw = false;
+
+    graphics_set_fill(fb.graphics_ctx, draw ? COLOR_WHITE : COLOR_BLACK);
+    graphics_fill_rect(fb.graphics_ctx, fb.cursor_x * graphics_get_font_width(), fb.cursor_y * graphics_get_font_height(),
+                       graphics_get_font_width(), graphics_get_font_height());
+}
+
 void fb_putc(char c) {
+    draw_cursor(false);
 	switch (c) {
 	case '\t':
 		fb.cursor_x += 4;
@@ -70,6 +82,7 @@ void fb_putc(char c) {
 
 		fb.cursor_y--;
 	}
+    draw_cursor(true);
 }
 
 void fb_puts(const char *str) {
@@ -111,7 +124,32 @@ void fb_puts(const char *str) {
 	graphics_swap_buffer(fb.graphics_ctx);
 }
 
+void fb_backspace() {
+    graphics_set_fill(fb.graphics_ctx, COLOR_BLACK);
+    graphics_fill_rect(fb.graphics_ctx, ((fb.cursor_x - 1) * graphics_get_font_width()), fb.cursor_y * graphics_get_font_height(),
+                       graphics_get_font_width(), graphics_get_font_height());
+    graphics_swap_buffer(fb.graphics_ctx);
+
+    fb.cursor_x--;
+    if (fb.cursor_x < 0) {
+        fb.cursor_y--;
+        fb.cursor_x = fb.col_size;
+    }
+}
+
 void fb_reset() {
     fb.cursor_x = 0;
     fb.cursor_y = 0;
+}
+
+void fb_set_cursor(bool show) {
+    enable_cursor = show;
+}
+
+int32_t fb_get_cursor_x() {
+    return fb.cursor_x;
+}
+
+int32_t fb_get_cursor_y() {
+    return fb.cursor_y;
 }
