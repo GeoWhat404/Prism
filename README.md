@@ -12,7 +12,7 @@ Prism is licensed under the [MIT License](LICENSE). See the `LICENSE` file for m
   - [X] Interrupts: ISR, IRQ, GDT
   - [X] Generic: RTC
 - Drivers
-  - [ ] PS/2 Keyboard
+  - [X] PS/2 Keyboard
   - [ ] AHCI 
   - [X] Framebuffer (it sucks)
 - Memory
