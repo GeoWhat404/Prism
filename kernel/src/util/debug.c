@@ -17,8 +17,6 @@ static const char *const log_severity_names[] = {
     [LVL_ERROR]         = "KERROR",
 };
 
-static const char *const color_reset = "\033[0m";
-
 void debugf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);

@@ -30,6 +30,10 @@ void mem_print_layout() {
 
     kinfo("MEM: Printing layout");
 
+    uintptr_t kernel_size = (uintptr_t)&kernel_end - (uintptr_t)&kernel_start;
+    kinfo("MEM: kernel_start=0x%016llx | kernel_end=0x%016llx | kernel_size=%llu bytes", 
+          &kernel_start, &kernel_end, kernel_size);
+
     struct limine_memmap_entry *entry;
     for (uint64_t i = 0; i < boot_info.lmmr->entry_count; i++) {
         entry = boot_info.lmmr->entries[i];

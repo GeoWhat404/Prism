@@ -262,7 +262,7 @@ static void keyboard_callback(int scancode) {
     switch (scancode) {
         case SCAN_CODE_KEY_BACKSPACE: {
 
-            if (fb_get_cursor_x() == strlen(shell_prompt))
+            if (fb_get_cursor_x() == (int32_t) strlen(shell_prompt))
                 break;
 
             // handled by the framebuffer

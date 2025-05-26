@@ -44,6 +44,8 @@ $(eval $(call DEFAULT_VAR,KLDFLAGS,$(DEFAULT_KLDFLAGS)))
 # Internal C flags that should not be changed by the user.
 
 override KCFLAGS += \
+	-Wall \
+	-Wextra \
 	-fno-stack-protector \
 	-fno-stack-check \
 	-nostartfiles \

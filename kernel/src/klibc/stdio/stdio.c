@@ -290,5 +290,6 @@ void printf(const char *fmt, ...) {
 }
 
 void putc(char c) {
-    vfs_write(VFS_FD_STDOUT, &c, 1);
+    uint8_t u8 = (uint8_t)c;
+    vfs_write(VFS_FD_STDOUT, &u8, 1);
 }

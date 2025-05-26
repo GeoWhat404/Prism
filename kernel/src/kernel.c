@@ -43,7 +43,7 @@ void init_systems() {
     init_mmu();
 }
 
-void init_keyboard() {
+bool init_keyboard() {
     // for now just do the ps2 for emulator debugging
 
     bool ps2 = ps2_keyboard_initialize();
@@ -53,7 +53,11 @@ void init_keyboard() {
 
     if (!ps2) {
         kerror("The system will continue without a keyboard!");
+
+        return false;
     }
+
+    return true;
 }
 
 void print_mem() {
@@ -100,11 +104,13 @@ void kmain() {
     init_systems();
     init_graphics();
     print_info();
-    init_keyboard();
-    shell_launch();
 
-    kinfo("Shell returned");
+    if (init_keyboard()) {
+        shell_launch();
+        kinfo("Shell returned");
+    }
 
+    // waste cpu cycles to punish the user for exiting the shell
     while (1) {
         hlt();
     }
